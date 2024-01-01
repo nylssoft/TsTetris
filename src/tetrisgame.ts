@@ -1,4 +1,5 @@
 ﻿import Controls from "./controls.js";
+
 import {
     Block, LBlock, TBlock, IBlock, SBlock, ZBlock, OBlock, JBlock,
     Playground,
@@ -477,13 +478,13 @@ var tetrisGame = (() => {
 
         Controls.createDiv(parent, "arrow-div");
         let arrowDivLeft = Controls.createDiv(parent, "arrow-left");
-        createImage(arrowDivLeft, "/images/buttons/arrow-left-3.png", 32, "ArrowLeft", "Left");
+        createImage(arrowDivLeft, "/images/arrow-left-3.png", 32, "ArrowLeft", "Left");
         let arrowDivRight = Controls.createDiv(parent, "arrow-right");
-        createImage(arrowDivRight, "/images/buttons/arrow-right-3.png", 32, "ArrowRight", "Right");
+        createImage(arrowDivRight, "/images/arrow-right-3.png", 32, "ArrowRight", "Right");
         let arrowDivUp = Controls.createDiv(parent, "arrow-up");
-        createImage(arrowDivUp, "/images/buttons/arrow-up-3.png", 32, "ArrowUp", "Rotate");
+        createImage(arrowDivUp, "/images/arrow-up-3.png", 32, "ArrowUp", "Rotate");
         let arrowDivDown = Controls.createDiv(parent, "arrow-down");
-        createImage(arrowDivDown, "/images/buttons/arrow-down-3.png", 32, "ArrowDown", "Drop");
+        createImage(arrowDivDown, "/images/arrow-down-3.png", 32, "ArrowDown", "Drop");
 
         canvas = Controls.create(parent, "canvas", "playground") as HTMLCanvasElement;
         canvas.width = pixelPerField * (playground.width + 2);
@@ -549,9 +550,7 @@ var tetrisGame = (() => {
         dirtyNextBlock = true;
 
         Controls.removeAllChildren(document.body);
-        const wrapBody = Controls.createDiv(document.body, "wrap-body");
-        wrapBody.id = "wrap-body-id";
-        const all = Controls.createDiv(wrapBody);
+        const all = Controls.createDiv(document.body);
         renderTetris(all);
     };
 
