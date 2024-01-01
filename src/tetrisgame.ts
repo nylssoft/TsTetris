@@ -56,11 +56,11 @@ var tetrisGame = (() => {
     // --- drawing canvas
 
     const drawRect = (ctx: CanvasRenderingContext2D, x: number, y: number, c: Color): void => {
-        ctx.fillStyle = colorMap.get(c)!.center;
+        const colorEntry: ColorEntry = colorMap.get(c)!;
+
+        ctx.fillStyle = colorEntry.center;
         ctx.beginPath();
         ctx.fillRect(x + borderWidth, y + borderWidth, pixelPerField - borderWidth * 2, pixelPerField - borderWidth);
-
-        const colorEntry: ColorEntry = colorMap.get(c)!;
 
         ctx.fillStyle = colorEntry.top;
         ctx.beginPath();
