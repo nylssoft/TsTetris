@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "alwaysStrict": true,
+    "noEmitOnError": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "wwwroot/js",
+    "removeComments": false,
+    "sourceMap": true,
+    "strict": true,
+    "target": "es6"
+  },
+  "include": ["src"]
+}
