@@ -1,11 +1,18 @@
 ﻿import Controls from "./controls.js";
 
 import {
-    Block, LBlock, TBlock, IBlock, SBlock, ZBlock, OBlock, JBlock,
+    Block,
+    BlockColor, BlockType,
+    IBlock,
+    JBlock,
+    LBlock,
+    OBlock,
     Playground,
-    State,
     Point,
-    ColorMap, ColorEntry, Color
+    SBlock,
+    State,
+    TBlock,
+    ZBlock
 } from "./tetristypes.js";
 
 var tetrisGame = (() => {
@@ -46,7 +53,17 @@ var tetrisGame = (() => {
     let pixelPerField: number;
     let borderWidth: number;
 
-    let colorMap: ColorMap;
+    const blockColors = {
+        "EMPTY": { center: "#000000", leftright: "#000000", top: "#000000", bottom: "#000000" },
+        "BORDER": { center: "#787878", leftright: "#a1a2a1", top: "#d7d7d7", bottom: "#373737" },
+        "ORANGE": { center: "#f0a000", leftright: "#d89000", top: "#fbe3b3", bottom: "#795000" },
+        "BLUE": { center: "#0000f0", leftright: "#0000d8", top: "#b3b3fb", bottom: "#000078" },
+        "YELLOW": { center: "#f0f000", leftright: "#d8d800", top: "#fbfbb3", bottom: "#787800" },
+        "CYAN": { center: "#00f0f0", leftright: "#00d8d8", top: "#b3fbfb", bottom: "#007878" },
+        "RED": { center: "#f00000", leftright: "#d80000", top: "#fbb3b3", bottom: "#780000" },
+        "GREEN": { center: "#00f000", leftright: "#00d800", top: "#b3fbb3", bottom: "#007800" },
+        "PURBLE": { center: "#a000f0", leftright: "#9000d8", top: "#e3b3fb", bottom: "#500078" }
+    };
 
     const increaseLevel = (): void => {
         level += 1;
@@ -55,14 +72,14 @@ var tetrisGame = (() => {
 
     // --- drawing canvas
 
-    const drawRect = (ctx: CanvasRenderingContext2D, x: number, y: number, c: Color): void => {
-        const colorEntry: ColorEntry = colorMap.get(c)!;
+    const drawRect = (ctx: CanvasRenderingContext2D, x: number, y: number, blockType: BlockType): void => {
+        const blockColor: BlockColor = blockColors[blockType];
 
-        ctx.fillStyle = colorEntry.center;
+        ctx.fillStyle = blockColor.center;
         ctx.beginPath();
         ctx.fillRect(x + borderWidth, y + borderWidth, pixelPerField - borderWidth * 2, pixelPerField - borderWidth);
 
-        ctx.fillStyle = colorEntry.top;
+        ctx.fillStyle = blockColor.top;
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(x + borderWidth, y + borderWidth);
@@ -70,7 +87,7 @@ var tetrisGame = (() => {
         ctx.lineTo(x + pixelPerField, y);
         ctx.fill();
 
-        ctx.fillStyle = colorEntry.bottom;
+        ctx.fillStyle = blockColor.bottom;
         ctx.beginPath();
         ctx.moveTo(x, y + pixelPerField);
         ctx.lineTo(x + borderWidth, y + pixelPerField - borderWidth);
@@ -78,7 +95,7 @@ var tetrisGame = (() => {
         ctx.lineTo(x + pixelPerField, y + pixelPerField);
         ctx.fill();
 
-        ctx.fillStyle = colorEntry.leftright;
+        ctx.fillStyle = blockColor.leftright;
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(x + borderWidth, y + borderWidth);
@@ -94,15 +111,15 @@ var tetrisGame = (() => {
     };
 
     const drawNextBlock = (ctx: CanvasRenderingContext2D): void => {
-        const nextTetrisBlock = nextBlock;
+        const nextTetrisBlock: Block | undefined = nextBlock;
         if (nextTetrisBlock) {
-            const offx = pixelPerField;
-            const offy = offx;
-            const points = nextTetrisBlock.getRelativePoints(nextTetrisBlock.orientation);
+            const offx: number = pixelPerField;
+            const offy: number = offx;
+            const points: Point[] = nextTetrisBlock.getRelativePoints(nextTetrisBlock.orientation);
             points.forEach(p => {
-                let x = offx + (nextTetrisBlock.x + p.x) * pixelPerField;
-                let y = offy + (nextTetrisBlock.y + p.y) * pixelPerField;
-                drawRect(ctx, x, y, nextTetrisBlock.color);
+                const x: number = offx + (nextTetrisBlock.x + p.x) * pixelPerField;
+                const y: number = offy + (nextTetrisBlock.y + p.y) * pixelPerField;
+                drawRect(ctx, x, y, nextTetrisBlock.blockType);
             });
         }
     };
@@ -114,45 +131,45 @@ var tetrisGame = (() => {
         clearPoints = [];
         const offx: number = pixelPerField;
         const offy: number = offx;
-        const tetrisBlock = block;
+        const tetrisBlock: Block | undefined = block;
         if (tetrisBlock) {
-            const points = tetrisBlock.getRelativePoints(tetrisBlock.orientation);
+            const points: Point[] = tetrisBlock.getRelativePoints(tetrisBlock.orientation);
             points.forEach(p => {
-                let x = offx + (tetrisBlock.x + p.x) * pixelPerField;
-                let y = offy + (tetrisBlock.y + p.y) * pixelPerField;
-                drawRect(ctx, x, y, tetrisBlock.color);
+                const x: number = offx + (tetrisBlock.x + p.x) * pixelPerField;
+                const y: number = offy + (tetrisBlock.y + p.y) * pixelPerField;
+                drawRect(ctx, x, y, tetrisBlock.blockType);
                 clearPoints.push({ "x": x, "y": y });
             });
         }
     };
 
     const drawBorder = (ctx: CanvasRenderingContext2D): void => {
-        for (let y = 0; y <= pixelPerField * (playground.height + 1); y += pixelPerField) {
+        for (let y: number = 0; y <= pixelPerField * (playground.height + 1); y += pixelPerField) {
             drawRect(ctx, 0, y, "BORDER");
             drawRect(ctx, pixelPerField * (playground.width + 1), y, "BORDER");
         }
-        for (let x = 1; x < pixelPerField * (playground.width + 1); x += pixelPerField) {
+        for (let x: number = 1; x < pixelPerField * (playground.width + 1); x += pixelPerField) {
             drawRect(ctx, x, 0, "BORDER");
             drawRect(ctx, x, pixelPerField * (playground.height + 1), "BORDER");
         }
     };
 
     const drawPlayground = (ctx: CanvasRenderingContext2D): void => {
-        const offx = pixelPerField;
-        const offy = offx;
+        const offx: number = pixelPerField;
+        const offy: number = offx;
         ctx.clearRect(offx, offy, playground.width * pixelPerField, playground.height * pixelPerField);
-        for (let y = 0; y < playground.height; y++) {
-            for (let x = 0; x < playground.width; x++) {
-                let c = playground.getColor(x, y);
-                if (c != "EMPTY") {
-                    drawRect(ctx, offx + x * pixelPerField, offy + y * pixelPerField, c);
+        for (let y: number = 0; y < playground.height; y++) {
+            for (let x: number = 0; x < playground.width; x++) {
+                const blockType: BlockType = playground.getBlockType(x, y);
+                if (blockType != "EMPTY") {
+                    drawRect(ctx, offx + x * pixelPerField, offy + y * pixelPerField, blockType);
                 }
             }
         }
     };
 
     const moveDown = (): void => {
-        const tetrisBlock = block;
+        const tetrisBlock: Block | undefined = block;
         if (!tetrisBlock) {
             return;
         }
@@ -177,8 +194,8 @@ var tetrisGame = (() => {
         block = undefined;
         clearPoints = [];
         dirtyPlayground = true;
-        let scores = [40, 100, 300, 1200];
-        let fullRows = playground.clearFullRows();
+        const scores: number[] = [40, 100, 300, 1200];
+        const fullRows: number = playground.clearFullRows();
         if (fullRows > 0) {
             score += scores[fullRows - 1] * (level + 1);
             lines += fullRows;
@@ -197,7 +214,7 @@ var tetrisGame = (() => {
     };
 
     const draw = (): void => {
-        const tetrisBlock = block;
+        const tetrisBlock: Block | undefined = block;
         // game logic
         if (isPaused) {
             window.requestAnimationFrame(draw);
@@ -285,7 +302,7 @@ var tetrisGame = (() => {
             }
         }
         // drawing
-        const ctx = canvas.getContext("2d")!;
+        const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
         if (dirtyBorder) {
             drawBorder(ctx);
             dirtyBorder = false;
@@ -299,7 +316,7 @@ var tetrisGame = (() => {
             dirtyBlock = false;
         }
         if (dirtyNextBlock && nextBlock) {
-            let ctxnext = canvasNextBlock.getContext("2d")!;
+            const ctxnext: CanvasRenderingContext2D = canvasNextBlock.getContext("2d")!;
             ctxnext.clearRect(0, 0, canvas.width, canvas.height);
             drawNextBlock(ctxnext);
             dirtyNextBlock = false;
@@ -310,7 +327,7 @@ var tetrisGame = (() => {
     // --- block methods
 
     const createNewBlock = (): Block => {
-        let idx = Math.floor(Math.random() * 7);
+        const idx: number = Math.floor(Math.random() * 7);
         switch (idx) {
             case 0:
                 return new LBlock();
@@ -396,24 +413,24 @@ var tetrisGame = (() => {
 
     const onCanvasTouchStart = (e: TouchEvent): void => {
         e.preventDefault();
-        const canvas = document.querySelector(".playground") as HTMLCanvasElement;
-        const touches = e.changedTouches;
-        const tetrisBlock = block;
+        const canvas: HTMLCanvasElement = document.querySelector(".playground") as HTMLCanvasElement;
+        const touches: TouchList = e.changedTouches;
+        const tetrisBlock: Block | undefined = block;
         if (touches.length === 1 && state != "GAMEOVER" && tetrisBlock) {
-            const touch = touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const tx = touch.clientX - rect.x;
-            const ty = touch.clientY - rect.y;
-            const offx = pixelPerField;
-            const offy = offx;
-            const points = tetrisBlock.getRelativePoints(tetrisBlock.orientation);
-            let pminx = Number.MAX_SAFE_INTEGER,
-                pminy = Number.MAX_SAFE_INTEGER,
-                pmaxx = 0,
-                pmaxy = 0;
+            const touch: Touch = touches[0];
+            const rect: DOMRect = canvas.getBoundingClientRect();
+            const tx: number = touch.clientX - rect.x;
+            const ty: number = touch.clientY - rect.y;
+            const offx: number = pixelPerField;
+            const offy: number = offx;
+            const points: Point[] = tetrisBlock.getRelativePoints(tetrisBlock.orientation);
+            let pminx: number = Number.MAX_SAFE_INTEGER,
+                pminy: number = Number.MAX_SAFE_INTEGER,
+                pmaxx: number = 0,
+                pmaxy: number = 0;
             points.forEach(p => {
-                const x = offx + (tetrisBlock.x + p.x) * pixelPerField;
-                const y = offy + (tetrisBlock.y + p.y) * pixelPerField;
+                const x: number = offx + (tetrisBlock.x + p.x) * pixelPerField;
+                const y: number = offy + (tetrisBlock.y + p.y) * pixelPerField;
                 pminx = Math.min(x, pminx);
                 pmaxx = Math.max(x, pmaxx);
                 pminy = Math.min(y, pminy);
@@ -441,10 +458,10 @@ var tetrisGame = (() => {
     const onCanvasTouchEnd = (e: TouchEvent): void => {
         e.preventDefault();
         keyPressed = undefined;
-        const touches = e.changedTouches;
+        const touches: TouchList = e.changedTouches;
         if (blockTouchY && blockTouchY > 0 && touches.length === 1 && state != "GAMEOVER") {
-            const touch = touches[0];
-            const diff = touch.clientY - blockTouchY;
+            const touch: Touch = touches[0];
+            const diff: number = touch.clientY - blockTouchY;
             if (diff < pixelPerField) {
                 keyPressed = "ArrowUp";
             }
@@ -467,7 +484,7 @@ var tetrisGame = (() => {
         levelDiv.textContent = `Level: ${level}`;
         linesDiv = Controls.createDiv(info);
         linesDiv.textContent = `Lines: ${lines}`;
-        let nextDiv = Controls.createDiv(info);
+        const nextDiv: HTMLDivElement = Controls.createDiv(info);
         nextDiv.textContent = "Next";
 
         gameOverDiv = Controls.createDiv(parent, "gameover");
@@ -477,13 +494,13 @@ var tetrisGame = (() => {
         newGameButton.style.visibility = "hidden";
 
         Controls.createDiv(parent, "arrow-div");
-        let arrowDivLeft = Controls.createDiv(parent, "arrow-left");
+        const arrowDivLeft: HTMLDivElement = Controls.createDiv(parent, "arrow-left");
         createImage(arrowDivLeft, "/images/arrow-left-3.png", 32, "ArrowLeft", "Left");
-        let arrowDivRight = Controls.createDiv(parent, "arrow-right");
+        const arrowDivRight: HTMLDivElement = Controls.createDiv(parent, "arrow-right");
         createImage(arrowDivRight, "/images/arrow-right-3.png", 32, "ArrowRight", "Right");
-        let arrowDivUp = Controls.createDiv(parent, "arrow-up");
+        const arrowDivUp: HTMLDivElement = Controls.createDiv(parent, "arrow-up");
         createImage(arrowDivUp, "/images/arrow-up-3.png", 32, "ArrowUp", "Rotate");
-        let arrowDivDown = Controls.createDiv(parent, "arrow-down");
+        const arrowDivDown: HTMLDivElement = Controls.createDiv(parent, "arrow-down");
         createImage(arrowDivDown, "/images/arrow-down-3.png", 32, "ArrowDown", "Drop");
 
         canvas = Controls.create(parent, "canvas", "playground") as HTMLCanvasElement;
@@ -502,16 +519,6 @@ var tetrisGame = (() => {
 
     const render = () => {
         playground = new Playground(10, 20);
-
-        colorMap = new Map<Color, ColorEntry>();
-        colorMap.set("ORANGE", { center: "#f0a000", leftright: "#d89000", top: "#fbe3b3", bottom: "#795000" });
-        colorMap.set("CYAN", { center: "#00f0f0", leftright: "#00d8d8", top: "#b3fbfb", bottom: "#007878" });
-        colorMap.set("RED", { center: "#f00000", leftright: "#d80000", top: "#fbb3b3", bottom: "#780000" });
-        colorMap.set("GREEN", { center: "#00f000", leftright: "#00d800", top: "#b3fbb3", bottom: "#007800" });
-        colorMap.set("PURBLE", { center: "#a000f0", leftright: "#9000d8", top: "#e3b3fb", bottom: "#500078" });
-        colorMap.set("YELLOW", { center: "#f0f000", leftright: "#d8d800", top: "#fbfbb3", bottom: "#787800" });
-        colorMap.set("BLUE", { center: "#0000f0", leftright: "#0000d8", top: "#b3b3fb", bottom: "#000078" });
-        colorMap.set("BORDER", { center: "#787878", leftright: "#a1a2a1", top: "#d7d7d7", bottom: "#373737" });
 
         speed = [
             48, // level 0
@@ -550,8 +557,7 @@ var tetrisGame = (() => {
         dirtyNextBlock = true;
 
         Controls.removeAllChildren(document.body);
-        const all = Controls.createDiv(document.body);
-        renderTetris(all);
+        renderTetris(Controls.createDiv(document.body));
     };
 
     const renderInit = () => {
@@ -561,7 +567,7 @@ var tetrisGame = (() => {
 
     // --- initialization
 
-    const initKeyDownEvent = () => {
+    const initKeyDownEvent = (): void => {
         document.addEventListener("keydown", e => {
             if (state != "GAMEOVER") {
                 if (e.key.startsWith("Arrow")) {
@@ -588,7 +594,7 @@ var tetrisGame = (() => {
         });
     };
 
-    const init = () => {
+    const init = (): void => {
         pixelPerField = 24;
         borderWidth = 3;
         initKeyDownEvent();

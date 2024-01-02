@@ -1,6 +1,8 @@
-﻿export type Color = "EMPTY" | "BORDER" | "ORANGE" | "BLUE" | "YELLOW" | "CYAN" | "RED" | "GREEN" | "PURBLE";
+﻿// types
 
-export type Row = Array<Color>;
+export type BlockType = "EMPTY" | "BORDER" | "ORANGE" | "BLUE" | "YELLOW" | "CYAN" | "RED" | "GREEN" | "PURBLE";
+
+export type Row = Array<BlockType>;
 
 export type Point = {
     x: number;
@@ -8,6 +10,17 @@ export type Point = {
 }
 
 export type Orientation = 0 | 1 | 2 | 3;
+
+export type BlockColor = {
+    center: string;
+    leftright: string;
+    top: string;
+    bottom: string;
+};
+
+export type State = "GAMEOVER" | "NEWBLOCK" | "DROPONEROW" | "SOFTDROP" | "MOVEDOWN";
+
+// classes
 
 export class Playground {
     private readonly rows: Row[];
@@ -17,7 +30,7 @@ export class Playground {
         this.rows = new Array<Row>(this.height);
         this.scroll = [];
         for (let i: number = 0; i < height; i++) {
-            this.rows[i] = new Array<Color>(this.width).fill("EMPTY");
+            this.rows[i] = new Array<BlockType>(this.width).fill("EMPTY");
         }
     }
 
@@ -26,17 +39,17 @@ export class Playground {
     }
 
     isFree(x: number, y: number): boolean {
-        return this.getColor(x, y) === "EMPTY";
+        return this.getBlockType(x, y) === "EMPTY";
     }
 
-    getColor(x: number, y: number): Color {
+    getBlockType(x: number, y: number): BlockType {
         if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
             return this.rows[y][x];
         }
         return "BORDER";
     }
 
-    setColor(x: number, y: number, c: Color): void {
+    setBlockType(x: number, y: number, c: BlockType): void {
         this.rows[y][x] = c;
     }
 
@@ -79,7 +92,7 @@ export abstract class Block {
     y: number = 0;
     orientation: Orientation = 0;
 
-    constructor(public readonly color: Color) { }
+    constructor(public readonly blockType: BlockType) { }
 
     abstract getRelativePoints(orientation: number): Point[];
 
@@ -120,7 +133,7 @@ export abstract class Block {
 
     stop(playground: Playground) {
         const points: Point[] = this.getRelativePoints(this.orientation);
-        points.forEach(p => playground.setColor(this.x + p.x, this.y + p.y, this.color));
+        points.forEach(p => playground.setBlockType(this.x + p.x, this.y + p.y, this.blockType));
     }
 
     protected _place(playground: Playground, x: number, y: number, orientation: Orientation): boolean {
@@ -356,14 +369,3 @@ export class IBlock extends Block {
         }
     }
 };
-
-export type ColorEntry = {
-    center: string;
-    leftright: string;
-    top: string;
-    bottom: string;
-};
-
-export type ColorMap = Map<Color, ColorEntry>;
-
-export type State = "GAMEOVER" | "NEWBLOCK" | "DROPONEROW" | "SOFTDROP" | "MOVEDOWN";
