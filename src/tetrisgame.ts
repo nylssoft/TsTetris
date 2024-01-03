@@ -41,7 +41,6 @@ var tetrisGame = (() => {
     let speed: number[];
     let clearPoints: Point[];
     let moveDownFrameCount: number;
-    let lastMoveDown: boolean;
     let keyPressedCount: number;
     let keyPressedMax: number;
     let keyPressed: string | undefined;
@@ -177,18 +176,13 @@ var tetrisGame = (() => {
             dirtyBlock = true;
             return;
         }
-        if (state == "SOFTDROP") {
+        if (state == "SOFTDROP" && keyPressed != "ArrowDown") {
             moveDownFrameCount++;
             if (moveDownFrameCount < speed[Math.min(29, level)]) {
                 return;
             }
             moveDownFrameCount = 0;
         }
-        if (!lastMoveDown) {
-            lastMoveDown = true;
-            return;
-        }
-        lastMoveDown = false;
         keyPressed = undefined;
         tetrisBlock.stop(playground);
         block = undefined;
@@ -252,42 +246,30 @@ var tetrisGame = (() => {
             if (keyPressed) {
                 keyPressedCount++;
                 if (keyPressedCount >= keyPressedMax) {
+                    let update = false;
                     if (keyPressed === "ArrowLeft") {
-                        if (tetrisBlock.moveLeft(playground)) {
-                            dirtyBlock = true;
-                            if (keyPressedMax > 16) {
-                                keyPressedMax = 16;
-                            }
-                            else {
-                                keyPressedMax = 6;
-                            }
-                            keyPressedCount = 0;
-                            skipMoveDown = true;
-                        }
+                        update = tetrisBlock.moveLeft(playground);
                     }
                     else if (keyPressed === "ArrowRight") {
-                        if (tetrisBlock.moveRight(playground)) {
-                            dirtyBlock = true;
-                            if (keyPressedMax > 16) {
-                                keyPressedMax = 16;
-                            }
-                            else {
-                                keyPressedMax = 6;
-                            }
-                            keyPressedCount = 0;
-                            skipMoveDown = true;
+                        update = tetrisBlock.moveRight(playground);
+                    }
+                    else if (keyPressed === "ArrowUp" || keyPressed === "a") {
+                        update = tetrisBlock.rotateRight(playground);
+                    }
+                    if (update) {
+                        dirtyBlock = true;
+                        if (keyPressedMax > 16) {
+                            keyPressedMax = 16;
                         }
+                        else {
+                            keyPressedMax = 6;
+                        }
+                        keyPressedCount = 0;
+                        skipMoveDown = true;
                     }
                 }
                 if (keyPressed === "ArrowDown" || keyPressed === " ") {
                     state = "SOFTDROP";
-                    keyPressed = undefined;
-                    skipMoveDown = true;
-                }
-                else if (keyPressed === "ArrowUp" || keyPressed === "a") {
-                    if (tetrisBlock.rotateRight(playground)) {
-                        dirtyBlock = true;
-                    }
                     keyPressed = undefined;
                     skipMoveDown = true;
                 }
