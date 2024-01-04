@@ -44,6 +44,7 @@ var tetrisGame = (() => {
     let keyPressedCount: number;
     let keyPressedMax: number;
     let keyPressed: string | undefined;
+    let canvasArrowUp: boolean;
     let dirtyBorder: boolean;
     let dirtyPlayground: boolean;
     let dirtyBlock: boolean;
@@ -255,6 +256,10 @@ var tetrisGame = (() => {
                     }
                     else if (keyPressed === "ArrowUp" || keyPressed === "a") {
                         update = tetrisBlock.rotateRight(playground);
+                        if (canvasArrowUp) {
+                            keyPressed = undefined;
+                            canvasArrowUp = false;
+                        }
                     }
                     if (update) {
                         dirtyBlock = true;
@@ -446,6 +451,7 @@ var tetrisGame = (() => {
             const diff: number = touch.clientY - blockTouchY;
             if (diff < pixelPerField) {
                 keyPressed = "ArrowUp";
+                canvasArrowUp = true;
             }
             else if (diff > 3 * pixelPerField) {
                 keyPressed = "ArrowDown";
@@ -472,7 +478,7 @@ var tetrisGame = (() => {
         gameOverDiv = Controls.createDiv(parent, "gameover");
         gameOverDiv.style.visibility = "hidden";
 
-        newGameButton = Controls.createButton(parent, "New Game", () => { render(); }, "newgame", "newgame");
+        newGameButton = Controls.createButton(parent, "New Game", () => { render("NEWBLOCK"); }, "newgame", "newgame");
         newGameButton.style.visibility = "hidden";
 
         Controls.createDiv(parent, "arrow-div");
@@ -499,7 +505,7 @@ var tetrisGame = (() => {
         canvasNextBlock.height = pixelPerField * 6;
     };
 
-    const render = (startState: State = "NEWBLOCK"): void => {
+    const render = (startState: State): void => {
         playground = new Playground(10, 20);
 
         speed = [
