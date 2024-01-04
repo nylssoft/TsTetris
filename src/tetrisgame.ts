@@ -499,7 +499,7 @@ var tetrisGame = (() => {
         canvasNextBlock.height = pixelPerField * 6;
     };
 
-    const render = () => {
+    const render = (startState: State = "NEWBLOCK"): void => {
         playground = new Playground(10, 20);
 
         speed = [
@@ -519,7 +519,7 @@ var tetrisGame = (() => {
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, // level 19-28
             1]; // level 29+
 
-        state = "NEWBLOCK";
+        state = startState;
         score = 0;
         level = 0;
         lines = 0;
@@ -540,10 +540,27 @@ var tetrisGame = (() => {
 
         Controls.removeAllChildren(document.body);
         renderTetris(Controls.createDiv(document.body));
+
+        if (startState === "GAMEOVER") {
+            showStartScreen();
+        }
     };
 
-    const renderInit = () => {
-        render();
+    const showStartScreen = (): void => {
+        nextBlock = createNewBlock();
+        const colors: BlockType[] = ["BLUE", "CYAN", "GREEN", "ORANGE", "PURBLE", "RED", "YELLOW"];
+        for (let y: number = 0; y < playground.height; y++) {
+            const t: number = Math.floor(Math.random() * colors.length);
+            const x: number = Math.floor(Math.random() * playground.width);
+            playground.setBlockType(x, y, colors[t]);
+        }
+        newGameButton.style.visibility = "visible";
+        dirtyPlayground = true;
+        dirtyNextBlock = true;
+    };
+
+    const renderInit = (): void => {
+        render("GAMEOVER");
         window.requestAnimationFrame(draw);
     };
 
