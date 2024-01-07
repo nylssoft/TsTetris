@@ -6,10 +6,12 @@ import {
     IBlock,
     JBlock,
     LBlock,
+    Levels,
     OBlock,
     Playground,
     Point,
     SBlock,
+    Screen,
     State,
     TBlock,
     ZBlock
@@ -24,6 +26,7 @@ var tetrisGame = (() => {
     let gameOverDiv: HTMLDivElement;
     let newGameButton: HTMLButtonElement;
     let canvasNextBlock: HTMLCanvasElement;
+    let remainingDiv: HTMLDivElement;
 
     // --- state
 
@@ -37,8 +40,10 @@ var tetrisGame = (() => {
     let level: number;
     let state: State;
     let blockTouchY: number | undefined;
+    let remainingLines: number;
+    let nextRandomRow: number | undefined;
+    let nextRandomPoint: number | undefined;
 
-    let speed: number[];
     let clearPoints: Point[];
     let moveDownFrameCount: number;
     let keyPressedCount: number;
@@ -67,7 +72,7 @@ var tetrisGame = (() => {
 
     const increaseLevel = (): void => {
         level += 1;
-        levelDiv.textContent = `Level ${level}`;
+        initLevel();
     };
 
     // --- drawing canvas
@@ -175,11 +180,21 @@ var tetrisGame = (() => {
         }
         if (tetrisBlock.moveDown(playground)) {
             dirtyBlock = true;
+            if (nextRandomPoint && Date.now() > nextRandomPoint && playground.getHighestRow() >= playground.height / 2) {
+                playground.insertRandomPoint();
+                nextRandomPoint = Levels.getNextRandomDate();
+                dirtyPlayground = true;
+            }
+            if (nextRandomRow && Date.now() > nextRandomRow && playground.getHighestRow() >= playground.height / 2) {
+                playground.insertRandomRow();
+                nextRandomRow = Levels.getNextRandomDate();
+                dirtyPlayground = true;
+            }
             return;
         }
         if (state == "SOFTDROP" && keyPressed != "ArrowDown") {
             moveDownFrameCount++;
-            if (moveDownFrameCount < speed[Math.min(29, level)]) {
+            if (moveDownFrameCount < Levels.getSpeed(level)) {
                 return;
             }
             moveDownFrameCount = 0;
@@ -194,12 +209,14 @@ var tetrisGame = (() => {
         if (fullRows > 0) {
             score += scores[fullRows - 1] * (level + 1);
             lines += fullRows;
-            if (lines >= (level + 1) * 10) {
+            remainingLines -= fullRows
+            if (remainingLines <= 0) {
                 increaseLevel();
             }
         }
-        scoreDiv.textContent = `Score: ${score}`;
-        linesDiv.textContent = `Lines: ${lines}`;
+        scoreDiv.textContent = `Score ${score}`;
+        linesDiv.textContent = `Lines ${lines}`;
+        remainingDiv.textContent = `${remainingLines}`;
         if (playground.hasDropRows()) {
             state = "DROPONEROW";
         }
@@ -239,9 +256,9 @@ var tetrisGame = (() => {
             }
         }
         else if (state == "MOVEDOWN" && tetrisBlock) {
-            let speedcnt = speed[Math.min(29, level)];
+            let speedcnt = Levels.getSpeed(level);
             if (blockMoveDownCount < 3) {
-                speedcnt = speed[Math.min(5, level)];
+                speedcnt = Levels.getSpeed(Math.min(5, level));
             }
             let skipMoveDown = false;
             if (keyPressed) {
@@ -467,11 +484,11 @@ var tetrisGame = (() => {
     const renderTetris = (parent: HTMLElement): void => {
         const info: HTMLDivElement = Controls.createDiv(parent, "info");
         scoreDiv = Controls.createDiv(info);
-        scoreDiv.textContent = `Score: ${score}`;
+        scoreDiv.textContent = `Score ${score}`;
         levelDiv = Controls.createDiv(info);
-        levelDiv.textContent = `Level: ${level}`;
+        levelDiv.textContent = `Level ${level + 1}`;
         linesDiv = Controls.createDiv(info);
-        linesDiv.textContent = `Lines: ${lines}`;
+        linesDiv.textContent = `Lines ${lines}`;
         const nextDiv: HTMLDivElement = Controls.createDiv(info);
         nextDiv.textContent = "Next";
 
@@ -503,27 +520,13 @@ var tetrisGame = (() => {
         canvasNextBlock = Controls.create(info, "canvas", "nextblock") as HTMLCanvasElement;
         canvasNextBlock.width = pixelPerField * 6;
         canvasNextBlock.height = pixelPerField * 6;
+
+        const remainingDivInfo: HTMLDivElement = Controls.createDiv(parent, "remainingInfo");
+        remainingDiv = Controls.createDiv(remainingDivInfo);
     };
 
     const render = (startState: State): void => {
         playground = new Playground(10, 20);
-
-        speed = [
-            48, // level 0
-            43, // level 1
-            38, // level 2
-            33, // level 3
-            28, // level 4
-            23, // level 5
-            18, // level 6
-            13, // level 7
-            8,  // level 8
-            6,  // level 9
-            5, 5, 5, // level 10 - 12
-            4, 4, 4, // level 13 - 15
-            3, 3, 3, // level 16-18
-            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, // level 19-28
-            1]; // level 29+
 
         state = startState;
         score = 0;
@@ -531,7 +534,7 @@ var tetrisGame = (() => {
         lines = 0;
 
         blockMoveDownCount = 0;
-        isPaused = false;
+        isPaused = startState === "NEWBLOCK";
         keyPressed = undefined;
         keyPressedCount = 0;
         keyPressedMax = 100;
@@ -550,6 +553,10 @@ var tetrisGame = (() => {
         if (startState === "GAMEOVER") {
             showStartScreen();
         }
+        else {
+            initLevel();
+            isPaused = false;
+        }
     };
 
     const showStartScreen = (): void => {
@@ -563,6 +570,23 @@ var tetrisGame = (() => {
         newGameButton.style.visibility = "visible";
         dirtyPlayground = true;
         dirtyNextBlock = true;
+    };
+
+    const initLevel = (): void => {
+        levelDiv.textContent = `Level ${level + 1}`;
+
+        remainingLines = Levels.getRemaingLines(level);
+        remainingDiv.textContent = `${remainingLines}`;
+
+        nextRandomRow = Levels.getNextDateRandomRow(level);
+        nextRandomPoint = Levels.getNextDateRandomPoint(level);
+
+        playground.clear();
+        const screen: Screen | undefined = Levels.getScreen(level);
+        if (screen) {
+            screen.forEach(t => playground.setBlockType(t[0], t[1], t[2]));
+        }
+        dirtyPlayground = true;
     };
 
     const renderInit = (): void => {
@@ -592,6 +616,11 @@ var tetrisGame = (() => {
                 }
                 if (e.key == "l") {
                     increaseLevel();
+                    score = 0;
+                    lines = 0;
+                    scoreDiv.textContent = `Score ${score}`;
+                    linesDiv.textContent = `Lines ${lines}`;
+                    placeNewBlock();
                 }
                 keyPressed = undefined;
             }
