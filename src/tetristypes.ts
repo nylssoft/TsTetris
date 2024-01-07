@@ -18,7 +18,7 @@ export type BlockColor = {
     bottom: string;
 };
 
-export type State = "GAMEOVER" | "NEWBLOCK" | "DROPONEROW" | "SOFTDROP" | "MOVEDOWN";
+export type State = "GAMEOVER" | "NEWBLOCK" | "DROPONEROW" | "DROPONEROW_MOVEBONUS" | "MOVEBONUS" | "SOFTDROP" | "MOVEDOWN";
 
 export type ScreenPoint = [number, number, BlockType];
 

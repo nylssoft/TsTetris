@@ -41,6 +41,7 @@ var tetrisGame = (() => {
     let state: State;
     let blockTouchY: number | undefined;
     let remainingLines: number;
+    let bonusY: number;
     let nextRandomRow: number | undefined;
     let nextRandomPoint: number | undefined;
 
@@ -173,6 +174,21 @@ var tetrisGame = (() => {
         }
     };
 
+    const moveBonus = (): void => {
+        if (bonusY < 0) {
+            state = "NEWBLOCK";
+            increaseLevel();
+            return;
+        }
+        for (let x: number = 0; x < playground.width; x++) {
+            playground.setBlockType(x, bonusY, "BORDER");
+        }
+        dirtyPlayground = true;
+        score += (level + 1) * 50;
+        scoreDiv.textContent = `Score ${score}`;
+        bonusY--;
+    };
+
     const moveDown = (): void => {
         const tetrisBlock: Block | undefined = block;
         if (!tetrisBlock) {
@@ -209,14 +225,22 @@ var tetrisGame = (() => {
         if (fullRows > 0) {
             score += scores[fullRows - 1] * (level + 1);
             lines += fullRows;
-            remainingLines -= fullRows
-            if (remainingLines <= 0) {
-                increaseLevel();
+            remainingLines -= fullRows;
+            remainingLines = Math.max(0, remainingLines);
+            scoreDiv.textContent = `Score ${score}`;
+            linesDiv.textContent = `Lines ${lines}`;
+            remainingDiv.textContent = `${remainingLines}`;
+            if (remainingLines === 0) {
+                if (playground.hasDropRows()) {
+                    state = "DROPONEROW_MOVEBONUS";
+                }
+                else {
+                    state = "MOVEBONUS";
+                    bonusY = playground.getHighestRow() - 1;
+                }
+                return;
             }
         }
-        scoreDiv.textContent = `Score ${score}`;
-        linesDiv.textContent = `Lines ${lines}`;
-        remainingDiv.textContent = `${remainingLines}`;
         if (playground.hasDropRows()) {
             state = "DROPONEROW";
         }
@@ -247,12 +271,25 @@ var tetrisGame = (() => {
                 moveDown();
             }
         }
-        else if (state == "DROPONEROW") {
+        else if (state == "DROPONEROW" || state == "DROPONEROW_MOVEBONUS") {
             if (!playground.dropOneRow()) {
-                placeNewBlock();
+                if (state == "DROPONEROW_MOVEBONUS") {
+                    state = "MOVEBONUS";
+                    bonusY = playground.getHighestRow();
+                }
+                else {
+                    placeNewBlock();
+                }
             }
             else {
                 dirtyPlayground = true;
+            }
+        }
+        else if (state === "MOVEBONUS") {
+            moveDownFrameCount++;
+            if (moveDownFrameCount >= 10) {
+                moveDownFrameCount = 0;
+                moveBonus();
             }
         }
         else if (state == "MOVEDOWN" && tetrisBlock) {
