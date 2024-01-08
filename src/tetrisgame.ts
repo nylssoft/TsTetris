@@ -42,6 +42,7 @@ var tetrisGame = (() => {
     let blockTouchY: number | undefined;
     let remainingLines: number;
     let bonusY: number;
+    let bonusMaxY: number;
     let nextRandomRow: number | undefined;
     let nextRandomPoint: number | undefined;
 
@@ -55,6 +56,7 @@ var tetrisGame = (() => {
     let dirtyPlayground: boolean;
     let dirtyBlock: boolean;
     let dirtyNextBlock: boolean;
+    let dirtyBonus: boolean;
 
     let pixelPerField: number;
     let borderWidth: number;
@@ -68,7 +70,8 @@ var tetrisGame = (() => {
         "CYAN": { center: "#00f0f0", leftright: "#00d8d8", top: "#b3fbfb", bottom: "#007878" },
         "RED": { center: "#f00000", leftright: "#d80000", top: "#fbb3b3", bottom: "#780000" },
         "GREEN": { center: "#00f000", leftright: "#00d800", top: "#b3fbb3", bottom: "#007800" },
-        "PURBLE": { center: "#a000f0", leftright: "#9000d8", top: "#e3b3fb", bottom: "#500078" }
+        "PURBLE": { center: "#a000f0", leftright: "#9000d8", top: "#e3b3fb", bottom: "#500078" },
+        "RANDOMPOINT": { center: "#787878", leftright: "#a1a2a1", top: "#d7d7d7", bottom: "#373737" }
     };
 
     const increaseLevel = (): void => {
@@ -83,7 +86,7 @@ var tetrisGame = (() => {
 
         ctx.fillStyle = blockColor.center;
         ctx.beginPath();
-        ctx.fillRect(x + borderWidth, y + borderWidth, pixelPerField - borderWidth * 2, pixelPerField - borderWidth);
+        ctx.fillRect(x + borderWidth, y + borderWidth, pixelPerField - borderWidth * 2, pixelPerField - borderWidth * 2);
 
         ctx.fillStyle = blockColor.top;
         ctx.beginPath();
@@ -168,25 +171,55 @@ var tetrisGame = (() => {
             for (let x: number = 0; x < playground.width; x++) {
                 const blockType: BlockType = playground.getBlockType(x, y);
                 if (blockType != "EMPTY") {
-                    drawRect(ctx, offx + x * pixelPerField, offy + y * pixelPerField, blockType);
+                    const xrect: number = offx + x * pixelPerField;
+                    const yrect: number = offy + y * pixelPerField;
+                    drawRect(ctx, xrect, yrect, blockType);
+                    if (blockType === "RANDOMPOINT") {
+                        drawRandomPoint(ctx, xrect, yrect);
+                    }
                 }
             }
         }
     };
 
+    const drawRandomPoint = (ctx: CanvasRenderingContext2D, xrect: number, yrect: number): void => {
+        const xgray: number = xrect + borderWidth;
+        const ygray: number = yrect + borderWidth;
+        const wgray: number = pixelPerField - 2 * borderWidth;
+        const hgray: number = pixelPerField - 2 * borderWidth;
+        const lineargradient: CanvasGradient = ctx.createLinearGradient(xgray, ygray, xgray, ygray + hgray);
+        lineargradient.addColorStop(0, "white");
+        lineargradient.addColorStop(1, "black");
+        ctx.fillStyle = lineargradient;
+        ctx.beginPath();
+        ctx.fillRect(xgray, ygray, wgray, hgray);
+    };
+
+    const drawBonus = (ctx: CanvasRenderingContext2D): void => {
+        const offx: number = pixelPerField;
+        const offy: number = offx;
+        const x: number = offx;
+        const y: number = offy + bonusY * pixelPerField;
+        const w: number = playground.width * pixelPerField;
+        const h: number = pixelPerField;
+        const lineargradient: CanvasGradient = ctx.createLinearGradient(x, y, x, y + h);
+        lineargradient.addColorStop(0, "white");
+        lineargradient.addColorStop(1, "black");
+        ctx.fillStyle = lineargradient;
+        ctx.beginPath();
+        ctx.fillRect(x, y, w, h);
+    };
+
     const moveBonus = (): void => {
-        if (bonusY < 0) {
+        if (bonusY >= bonusMaxY) {
             state = "NEWBLOCK";
             increaseLevel();
             return;
         }
-        for (let x: number = 0; x < playground.width; x++) {
-            playground.setBlockType(x, bonusY, "BORDER");
-        }
-        dirtyPlayground = true;
+        dirtyBonus = true;
         score += (level + 1) * 50;
         scoreDiv.textContent = `Score ${score}`;
-        bonusY--;
+        bonusY++;
     };
 
     const moveDown = (): void => {
@@ -236,7 +269,9 @@ var tetrisGame = (() => {
                 }
                 else {
                     state = "MOVEBONUS";
-                    bonusY = playground.getHighestRow() - 1;
+                    bonusY = 0;
+                    bonusMaxY = playground.getHighestRow() - 1;
+                    dirtyBonus = true;
                 }
                 return;
             }
@@ -275,7 +310,9 @@ var tetrisGame = (() => {
             if (!playground.dropOneRow()) {
                 if (state == "DROPONEROW_MOVEBONUS") {
                     state = "MOVEBONUS";
-                    bonusY = playground.getHighestRow();
+                    bonusY = 0;
+                    bonusMaxY = playground.getHighestRow() - 1;
+                    dirtyBonus = true;
                 }
                 else {
                     placeNewBlock();
@@ -355,6 +392,10 @@ var tetrisGame = (() => {
         if (dirtyBlock && block) {
             drawBlock(ctx);
             dirtyBlock = false;
+        }
+        if (dirtyBonus) {
+            drawBonus(ctx);
+            dirtyBonus = false;
         }
         if (dirtyNextBlock && nextBlock) {
             const ctxnext: CanvasRenderingContext2D = canvasNextBlock.getContext("2d")!;

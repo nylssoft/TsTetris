@@ -1,6 +1,6 @@
 ﻿// types
 
-export type BlockType = "EMPTY" | "BORDER" | "ORANGE" | "BLUE" | "YELLOW" | "CYAN" | "RED" | "GREEN" | "PURBLE";
+export type BlockType = "EMPTY" | "BORDER" | "ORANGE" | "BLUE" | "YELLOW" | "CYAN" | "RED" | "GREEN" | "PURBLE" | "RANDOMPOINT";
 
 export type Row = Array<BlockType>;
 
@@ -140,7 +140,7 @@ export class Playground {
     insertRandomPoint(): void {
         const p: Point | undefined = this.getRandomPoint();
         if (p) {
-            this.rows[p.y][p.x] = "BORDER";
+            this.rows[p.y][p.x] = "RANDOMPOINT";
         }
     }
 
