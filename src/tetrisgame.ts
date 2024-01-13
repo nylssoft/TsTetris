@@ -2,19 +2,17 @@
 
 import {
     Block,
+    BlockAction,
     BlockColor, BlockType,
-    IBlock,
-    JBlock,
-    LBlock,
+    GameAction,
+    GameContext,
+    InitLevelAction,
     Levels,
-    OBlock,
+    MoveBonusAction,
+    NewBlockAction,
     Playground,
     Point,
-    SBlock,
-    Screen,
-    State,
-    TBlock,
-    ZBlock
+    StartScreenAction
 } from "./tetristypes.js";
 
 var tetrisGame = (() => {
@@ -30,33 +28,11 @@ var tetrisGame = (() => {
 
     // --- state
 
-    let block: Block | undefined;
-    let nextBlock: Block | undefined;
-    let blockMoveDownCount: number;
-    let isPaused: boolean;
-    let playground: Playground;
-    let score: number;
-    let lines: number;
-    let level: number;
-    let state: State;
-    let blockTouchY: number | undefined;
-    let remainingLines: number;
-    let bonusY: number;
-    let bonusMaxY: number;
-    let nextRandomRow: number | undefined;
-    let nextRandomPoint: number | undefined;
+    let gameAction: GameAction;
+    let gameContext: GameContext;
 
-    let clearPoints: Point[];
-    let moveDownFrameCount: number;
-    let keyPressedCount: number;
-    let keyPressedMax: number;
-    let keyPressed: string | undefined;
-    let canvasArrowUp: boolean;
-    let dirtyBorder: boolean;
-    let dirtyPlayground: boolean;
-    let dirtyBlock: boolean;
-    let dirtyNextBlock: boolean;
-    let dirtyBonus: boolean;
+    let isPaused: boolean;
+    let blockTouchY: number | undefined;
 
     let pixelPerField: number;
     let borderWidth: number;
@@ -72,11 +48,6 @@ var tetrisGame = (() => {
         "GREEN": { center: "#00f000", leftright: "#00d800", top: "#b3fbb3", bottom: "#007800" },
         "PURBLE": { center: "#a000f0", leftright: "#9000d8", top: "#e3b3fb", bottom: "#500078" },
         "RANDOMPOINT": { center: "#787878", leftright: "#a1a2a1", top: "#d7d7d7", bottom: "#373737" }
-    };
-
-    const increaseLevel = (): void => {
-        level += 1;
-        initLevel();
     };
 
     // --- drawing canvas
@@ -120,56 +91,56 @@ var tetrisGame = (() => {
     };
 
     const drawNextBlock = (ctx: CanvasRenderingContext2D): void => {
-        const nextTetrisBlock: Block | undefined = nextBlock;
+        const nextTetrisBlock: Block | undefined = gameContext.nextBlock;
         if (nextTetrisBlock) {
-            const offx: number = pixelPerField;
-            const offy: number = offx;
             const points: Point[] = nextTetrisBlock.getRelativePoints(nextTetrisBlock.orientation);
+            const xoff = -Math.min(...points.map(p => p.x));
+            const yoff = -Math.min(...points.map(p => p.y));
             points.forEach(p => {
-                const x: number = offx + (nextTetrisBlock.x + p.x) * pixelPerField;
-                const y: number = offy + (nextTetrisBlock.y + p.y) * pixelPerField;
+                const x: number = (p.x + xoff) * pixelPerField;
+                const y: number = (p.y + yoff) * pixelPerField;
                 drawRect(ctx, x, y, nextTetrisBlock.blockType);
             });
         }
     };
 
     const drawBlock = (ctx: CanvasRenderingContext2D): void => {
-        clearPoints.forEach(p => {
+        gameContext.clearPoints.forEach(p => {
             ctx.clearRect(p.x, p.y, pixelPerField, pixelPerField);
         });
-        clearPoints = [];
+        gameContext.clearPoints = [];
         const offx: number = pixelPerField;
         const offy: number = offx;
-        const tetrisBlock: Block | undefined = block;
+        const tetrisBlock: Block | undefined = gameContext.block;
         if (tetrisBlock) {
             const points: Point[] = tetrisBlock.getRelativePoints(tetrisBlock.orientation);
             points.forEach(p => {
                 const x: number = offx + (tetrisBlock.x + p.x) * pixelPerField;
                 const y: number = offy + (tetrisBlock.y + p.y) * pixelPerField;
                 drawRect(ctx, x, y, tetrisBlock.blockType);
-                clearPoints.push({ "x": x, "y": y });
+                gameContext.clearPoints.push({ "x": x, "y": y });
             });
         }
     };
 
     const drawBorder = (ctx: CanvasRenderingContext2D): void => {
-        for (let y: number = 0; y <= pixelPerField * (playground.height + 1); y += pixelPerField) {
+        for (let y: number = 0; y <= pixelPerField * (gameContext.playground.height + 1); y += pixelPerField) {
             drawRect(ctx, 0, y, "BORDER");
-            drawRect(ctx, pixelPerField * (playground.width + 1), y, "BORDER");
+            drawRect(ctx, pixelPerField * (gameContext.playground.width + 1), y, "BORDER");
         }
-        for (let x: number = 1; x < pixelPerField * (playground.width + 1); x += pixelPerField) {
+        for (let x: number = 1; x < pixelPerField * (gameContext.playground.width + 1); x += pixelPerField) {
             drawRect(ctx, x, 0, "BORDER");
-            drawRect(ctx, x, pixelPerField * (playground.height + 1), "BORDER");
+            drawRect(ctx, x, pixelPerField * (gameContext.playground.height + 1), "BORDER");
         }
     };
 
     const drawPlayground = (ctx: CanvasRenderingContext2D): void => {
         const offx: number = pixelPerField;
         const offy: number = offx;
-        ctx.clearRect(offx, offy, playground.width * pixelPerField, playground.height * pixelPerField);
-        for (let y: number = 0; y < playground.height; y++) {
-            for (let x: number = 0; x < playground.width; x++) {
-                const blockType: BlockType = playground.getBlockType(x, y);
+        ctx.clearRect(offx, offy, gameContext.playground.width * pixelPerField, gameContext.playground.height * pixelPerField);
+        for (let y: number = 0; y < gameContext.playground.height; y++) {
+            for (let x: number = 0; x < gameContext.playground.width; x++) {
+                const blockType: BlockType = gameContext.playground.getBlockType(x, y);
                 if (blockType != "EMPTY") {
                     const xrect: number = offx + x * pixelPerField;
                     const yrect: number = offy + y * pixelPerField;
@@ -196,11 +167,15 @@ var tetrisGame = (() => {
     };
 
     const drawBonus = (ctx: CanvasRenderingContext2D): void => {
+        if (gameAction.getState() !== "MOVEBONUS") {
+            return;
+        }
+        const moveBonusAction: MoveBonusAction = gameAction as MoveBonusAction;
         const offx: number = pixelPerField;
         const offy: number = offx;
         const x: number = offx;
-        const y: number = offy + bonusY * pixelPerField;
-        const w: number = playground.width * pixelPerField;
+        const y: number = offy + moveBonusAction.bonusY * pixelPerField;
+        const w: number = gameContext.playground.width * pixelPerField;
         const h: number = pixelPerField;
         const lineargradient: CanvasGradient = ctx.createLinearGradient(x, y, x, y + h);
         lineargradient.addColorStop(0, "white");
@@ -210,251 +185,48 @@ var tetrisGame = (() => {
         ctx.fillRect(x, y, w, h);
     };
 
-    const moveBonus = (): void => {
-        if (bonusY >= bonusMaxY) {
-            state = "NEWBLOCK";
-            increaseLevel();
-            return;
-        }
-        dirtyBonus = true;
-        score += (level + 1) * 50;
-        scoreDiv.textContent = `Score ${score}`;
-        bonusY++;
-    };
-
-    const moveDown = (): void => {
-        const tetrisBlock: Block | undefined = block;
-        if (!tetrisBlock) {
-            return;
-        }
-        if (tetrisBlock.moveDown(playground)) {
-            dirtyBlock = true;
-            if (nextRandomPoint && Date.now() > nextRandomPoint && playground.getHighestRow() >= playground.height / 2) {
-                playground.insertRandomPoint();
-                nextRandomPoint = Levels.getNextRandomDate();
-                dirtyPlayground = true;
-            }
-            if (nextRandomRow && Date.now() > nextRandomRow && playground.getHighestRow() >= playground.height / 2) {
-                playground.insertRandomRow();
-                nextRandomRow = Levels.getNextRandomDate();
-                dirtyPlayground = true;
-            }
-            return;
-        }
-        if (state == "SOFTDROP" && keyPressed != "ArrowDown") {
-            moveDownFrameCount++;
-            if (moveDownFrameCount < Levels.getSpeed(level)) {
-                return;
-            }
-            moveDownFrameCount = 0;
-        }
-        keyPressed = undefined;
-        tetrisBlock.stop(playground);
-        block = undefined;
-        clearPoints = [];
-        dirtyPlayground = true;
-        const scores: number[] = [40, 100, 300, 1200];
-        const fullRows: number = playground.clearFullRows();
-        if (fullRows > 0) {
-            score += scores[fullRows - 1] * (level + 1);
-            lines += fullRows;
-            remainingLines -= fullRows;
-            remainingLines = Math.max(0, remainingLines);
-            scoreDiv.textContent = `Score ${score}`;
-            linesDiv.textContent = `Lines ${lines}`;
-            remainingDiv.textContent = `${remainingLines}`;
-            if (remainingLines === 0) {
-                if (playground.hasDropRows()) {
-                    state = "DROPONEROW_MOVEBONUS";
-                }
-                else {
-                    state = "MOVEBONUS";
-                    bonusY = 0;
-                    bonusMaxY = playground.getHighestRow() - 1;
-                    dirtyBonus = true;
-                }
-                return;
-            }
-        }
-        if (playground.hasDropRows()) {
-            state = "DROPONEROW";
-        }
-        else {
-            placeNewBlock();
-        }
-    };
-
     const draw = (): void => {
-        const tetrisBlock: Block | undefined = block;
-        // game logic
-        if (isPaused) {
+        if (isPaused || !gameContext || !gameAction) {
             window.requestAnimationFrame(draw);
             return;
         }
-        if (state == "NEWBLOCK") {
-            placeNewBlock();
-        }
-        else if (state == "SOFTDROP") {
-            if (keyPressed && keyPressed != "ArrowDown") {
-                state = "MOVEDOWN";
-                if (keyPressed != "ArrowLeft" && keyPressed != "ArrowRight") {
-                    keyPressed = undefined;
-                }
-                moveDownFrameCount = 0;
-            }
-            else {
-                moveDown();
-            }
-        }
-        else if (state == "DROPONEROW" || state == "DROPONEROW_MOVEBONUS") {
-            if (!playground.dropOneRow()) {
-                if (state == "DROPONEROW_MOVEBONUS") {
-                    state = "MOVEBONUS";
-                    bonusY = 0;
-                    bonusMaxY = playground.getHighestRow() - 1;
-                    dirtyBonus = true;
-                }
-                else {
-                    placeNewBlock();
-                }
-            }
-            else {
-                dirtyPlayground = true;
-            }
-        }
-        else if (state === "MOVEBONUS") {
-            moveDownFrameCount++;
-            if (moveDownFrameCount >= 10) {
-                moveDownFrameCount = 0;
-                moveBonus();
-            }
-        }
-        else if (state == "MOVEDOWN" && tetrisBlock) {
-            let speedcnt = Levels.getSpeed(level);
-            if (blockMoveDownCount < 3) {
-                speedcnt = Levels.getSpeed(Math.min(5, level));
-            }
-            let skipMoveDown = false;
-            if (keyPressed) {
-                keyPressedCount++;
-                if (keyPressedCount >= keyPressedMax) {
-                    let update = false;
-                    if (keyPressed === "ArrowLeft") {
-                        update = tetrisBlock.moveLeft(playground);
-                    }
-                    else if (keyPressed === "ArrowRight") {
-                        update = tetrisBlock.moveRight(playground);
-                    }
-                    else if (keyPressed === "ArrowUp" || keyPressed === "a") {
-                        update = tetrisBlock.rotateRight(playground);
-                        if (canvasArrowUp) {
-                            keyPressed = undefined;
-                            canvasArrowUp = false;
-                        }
-                    }
-                    if (update) {
-                        dirtyBlock = true;
-                        if (keyPressedMax > 16) {
-                            keyPressedMax = 16;
-                        }
-                        else {
-                            keyPressedMax = 6;
-                        }
-                        keyPressedCount = 0;
-                        skipMoveDown = true;
-                    }
-                }
-                if (keyPressed === "ArrowDown" || keyPressed === " ") {
-                    state = "SOFTDROP";
-                    keyPressed = undefined;
-                    skipMoveDown = true;
-                }
-            }
-            if (!skipMoveDown) {
-                moveDownFrameCount++;
-                if (moveDownFrameCount >= speedcnt) {
-                    moveDownFrameCount = 0;
-                    moveDown();
-                    blockMoveDownCount++;
-                }
-            }
-        }
-        // drawing
+        gameAction = gameAction.execute(gameContext);
         const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
-        if (dirtyBorder) {
+        if (gameContext.dirtyBorder) {
             drawBorder(ctx);
-            dirtyBorder = false;
+            gameContext.dirtyBorder = false;
         }
-        if (dirtyPlayground && playground) {
+        if (gameContext.dirtyPlayground && gameContext.playground) {
             drawPlayground(ctx);
-            dirtyPlayground = false;
+            gameContext.dirtyPlayground = false;
         }
-        if (dirtyBlock && block) {
+        if (gameContext.dirtyBlock && gameContext.block) {
             drawBlock(ctx);
-            dirtyBlock = false;
+            gameContext.dirtyBlock = false;
         }
-        if (dirtyBonus) {
+        if (gameContext.dirtyBonus) {
             drawBonus(ctx);
-            dirtyBonus = false;
+            gameContext.dirtyBonus = false;
         }
-        if (dirtyNextBlock && nextBlock) {
+        if (gameContext.dirtyNextBlock && gameContext.nextBlock) {
             const ctxnext: CanvasRenderingContext2D = canvasNextBlock.getContext("2d")!;
             ctxnext.clearRect(0, 0, canvas.width, canvas.height);
             drawNextBlock(ctxnext);
-            dirtyNextBlock = false;
+            gameContext.dirtyNextBlock = false;
+        }
+        if (gameContext.dirtyInfo) {
+            scoreDiv.textContent = `Score ${gameContext.score}`;
+            levelDiv.textContent = `Level ${gameContext.level}`;
+            linesDiv.textContent = `Lines ${gameContext.lines}`;
+            remainingDiv.textContent = gameContext.remainingLines > 0 ? `${gameContext.remainingLines}` : "";
+            if (gameAction.getState() == "GAMEOVER") {
+                gameOverDiv.textContent = "GAME OVER";
+                gameOverDiv.style.visibility = "visible";
+                newGameButton.style.visibility = "visible";
+            }
+            gameContext.dirtyInfo = false;
         }
         window.requestAnimationFrame(draw);
-    };
-
-    // --- block methods
-
-    const createNewBlock = (): Block => {
-        const idx: number = Math.floor(Math.random() * 7);
-        switch (idx) {
-            case 0:
-                return new LBlock();
-            case 1:
-                return new JBlock();
-            case 2:
-                return new IBlock();
-            case 3:
-                return new TBlock();
-            case 4:
-                return new ZBlock();
-            case 5:
-                return new SBlock();
-            default:
-                return new OBlock();
-        }
-    };
-
-    const placeNewBlock = (): void => {
-        block = undefined;
-        let newBlock: Block;
-        clearPoints = [];
-        if (nextBlock) {
-            newBlock = nextBlock;
-            nextBlock = createNewBlock();
-        }
-        else {
-            newBlock = createNewBlock();
-            nextBlock = createNewBlock();
-        }
-        if (newBlock.placeFirstRow(playground)) {
-            block = newBlock;
-            state = "MOVEDOWN";
-            moveDownFrameCount = 0;
-            keyPressedCount = 0;
-            dirtyBlock = true;
-            dirtyNextBlock = true;
-            blockMoveDownCount = 0;
-        }
-        else {
-            gameOverDiv.textContent = "GAME OVER";
-            gameOverDiv.style.visibility = "visible";
-            newGameButton.style.visibility = "visible";
-            state = "GAMEOVER";
-        }
     };
 
     // --- rendering HTML elements
@@ -469,27 +241,27 @@ var tetrisGame = (() => {
         img.width = size;
         img.addEventListener("mousedown", e => {
             e.preventDefault();
-            keyPressed = action;
-            keyPressedMax = 100;
-            keyPressedCount = keyPressedMax;
+            gameContext.keyPressed = action;
+            gameContext.keyPressedMax = 100;
+            gameContext.keyPressedCount = gameContext.keyPressedMax;
         });
         img.addEventListener("mouseup", e => {
             e.preventDefault();
-            keyPressed = undefined;
+            gameContext.keyPressed = undefined;
         });
         img.addEventListener("touchstart", e => {
             e.preventDefault();
-            keyPressed = action;
-            keyPressedMax = 100;
-            keyPressedCount = keyPressedMax;
+            gameContext.keyPressed = action;
+            gameContext.keyPressedMax = 100;
+            gameContext.keyPressedCount = gameContext.keyPressedMax;
         });
         img.addEventListener("touchend", e => {
             e.preventDefault();
-            keyPressed = undefined;
+            gameContext.keyPressed = undefined;
         });
         img.addEventListener("touchcancel", e => {
             e.preventDefault();
-            keyPressed = undefined;
+            gameContext.keyPressed = undefined;
         });
     };
 
@@ -497,8 +269,8 @@ var tetrisGame = (() => {
         e.preventDefault();
         const canvas: HTMLCanvasElement = document.querySelector(".playground") as HTMLCanvasElement;
         const touches: TouchList = e.changedTouches;
-        const tetrisBlock: Block | undefined = block;
-        if (touches.length === 1 && state != "GAMEOVER" && tetrisBlock) {
+        const tetrisBlock: Block | undefined = gameContext.block;
+        if (touches.length === 1 && isGameRunning() && tetrisBlock) {
             const touch: Touch = touches[0];
             const rect: DOMRect = canvas.getBoundingClientRect();
             const tx: number = touch.clientX - rect.x;
@@ -518,42 +290,42 @@ var tetrisGame = (() => {
                 pminy = Math.min(y, pminy);
                 pmaxy = Math.max(y, pmaxy);
             });
-            keyPressed = undefined;
+            gameContext.keyPressed = undefined;
             blockTouchY = undefined;
             if (tx >= pminx - pixelPerField && tx <= pmaxx + 2 * pixelPerField &&
                 ty >= pminy - pixelPerField && ty <= pmaxy + 2 * pixelPerField) {
                 blockTouchY = touch.clientY;
             }
             else if (tx < pminx) {
-                keyPressed = "ArrowLeft";
+                gameContext.keyPressed = "ArrowLeft";
             }
             else if (tx > pmaxx + pixelPerField) {
-                keyPressed = "ArrowRight";
+                gameContext.keyPressed = "ArrowRight";
             }
-            if (keyPressed) {
-                keyPressedMax = 100;
-                keyPressedCount = keyPressedMax;
+            if (gameContext.keyPressed) {
+                gameContext.keyPressedMax = 100;
+                gameContext.keyPressedCount = gameContext.keyPressedMax;
             }
         }
     };
 
     const onCanvasTouchEnd = (e: TouchEvent): void => {
         e.preventDefault();
-        keyPressed = undefined;
+        gameContext.keyPressed = undefined;
         const touches: TouchList = e.changedTouches;
-        if (blockTouchY && blockTouchY > 0 && touches.length === 1 && state != "GAMEOVER") {
+        if (blockTouchY && blockTouchY > 0 && touches.length === 1 && isGameRunning()) {
             const touch: Touch = touches[0];
             const diff: number = touch.clientY - blockTouchY;
             if (diff < pixelPerField) {
-                keyPressed = "ArrowUp";
-                canvasArrowUp = true;
+                gameContext.keyPressed = "ArrowUp";
+                gameContext.canvasArrowUp = true;
             }
             else if (diff > 3 * pixelPerField) {
-                keyPressed = "ArrowDown";
+                gameContext.keyPressed = "ArrowDown";
             }
-            if (keyPressed) {
-                keyPressedMax = 100;
-                keyPressedCount = keyPressedMax;
+            if (gameContext.keyPressed) {
+                gameContext.keyPressedMax = 100;
+                gameContext.keyPressedCount = gameContext.keyPressedMax;
             }
         }
         blockTouchY = undefined;
@@ -562,21 +334,18 @@ var tetrisGame = (() => {
     const renderTetris = (parent: HTMLElement): void => {
         const info: HTMLDivElement = Controls.createDiv(parent, "info");
         scoreDiv = Controls.createDiv(info);
-        scoreDiv.textContent = `Score ${score}`;
+        scoreDiv.textContent = `Score ${gameContext.score}`;
         levelDiv = Controls.createDiv(info);
-        levelDiv.textContent = `Level ${level + 1}`;
+        levelDiv.textContent = `Level ${gameContext.level + 1}`;
         linesDiv = Controls.createDiv(info);
-        linesDiv.textContent = `Lines ${lines}`;
-        const nextDiv: HTMLDivElement = Controls.createDiv(info);
-        nextDiv.textContent = "Next";
+        linesDiv.textContent = `Lines ${gameContext.lines}`;
 
         gameOverDiv = Controls.createDiv(parent, "gameover");
         gameOverDiv.style.visibility = "hidden";
 
-        newGameButton = Controls.createButton(parent, "New Game", () => { render("NEWBLOCK"); }, "newgame", "newgame");
+        newGameButton = Controls.createButton(parent, "New Game", () => { render(new NewBlockAction()); }, "newgame", "newgame");
         newGameButton.style.visibility = "hidden";
 
-        Controls.createDiv(parent, "arrow-div");
         const arrowDivLeft: HTMLDivElement = Controls.createDiv(parent, "arrow-left");
         createImage(arrowDivLeft, "/images/arrow-left-3.png", 32, "ArrowLeft", "Left");
         const arrowDivRight: HTMLDivElement = Controls.createDiv(parent, "arrow-right");
@@ -587,8 +356,8 @@ var tetrisGame = (() => {
         createImage(arrowDivDown, "/images/arrow-down-3.png", 32, "ArrowDown", "Drop");
 
         canvas = Controls.create(parent, "canvas", "playground") as HTMLCanvasElement;
-        canvas.width = pixelPerField * (playground.width + 2);
-        canvas.height = pixelPerField * (playground.height + 2);
+        canvas.width = pixelPerField * (gameContext.playground.width + 2);
+        canvas.height = pixelPerField * (gameContext.playground.height + 2);
 
         canvas.addEventListener("touchstart", onCanvasTouchStart, { passive: false });
         canvas.addEventListener("touchend", onCanvasTouchEnd, { passive: false });
@@ -599,108 +368,106 @@ var tetrisGame = (() => {
         canvasNextBlock.width = pixelPerField * 6;
         canvasNextBlock.height = pixelPerField * 6;
 
-        const remainingDivInfo: HTMLDivElement = Controls.createDiv(parent, "remainingInfo");
+        const remainingDivInfo: HTMLDivElement = Controls.createDiv(info, "remainingInfo");
         remainingDiv = Controls.createDiv(remainingDivInfo);
     };
 
-    const render = (startState: State): void => {
-        playground = new Playground(10, 20);
+    const render = (startGameAction: GameAction): void => {
 
-        state = startState;
-        score = 0;
-        level = 0;
-        lines = 0;
+        isPaused = startGameAction.getState() === "NEWBLOCK";
 
-        blockMoveDownCount = 0;
-        isPaused = startState === "NEWBLOCK";
-        keyPressed = undefined;
-        keyPressedCount = 0;
-        keyPressedMax = 100;
-        moveDownFrameCount = 0;
-        clearPoints = [];
-        block = undefined;
-        nextBlock = undefined;
-        dirtyBorder = true;
-        dirtyPlayground = true;
-        dirtyBlock = true;
-        dirtyNextBlock = true;
+        gameAction = startGameAction;
+
+        gameContext = {
+            playground: new Playground(10, 20),
+
+            block: undefined,
+            nextBlock: undefined,
+            nextRandomPoint: undefined,
+            nextRandomRow: undefined,
+
+            clearPoints: [],
+
+            keyPressed: undefined,
+            keyPressedCount: 0,
+            keyPressedMax: 100,
+            canvasArrowUp: false,
+
+            dirtyBlock: true,
+            dirtyBonus: true,
+            dirtyBorder: true,
+            dirtyInfo: true,
+            dirtyNextBlock: true,
+            dirtyPlayground: true,
+
+            level: 0,
+            lines: 0,
+            score: 0,
+            remainingLines: 0,
+        };
 
         Controls.removeAllChildren(document.body);
         renderTetris(Controls.createDiv(document.body));
 
-        if (startState === "GAMEOVER") {
+        if (gameAction.getState() === "STARTSCREEN") {
             showStartScreen();
         }
         else {
-            initLevel();
-            isPaused = false;
+            gameContext.remainingLines = Levels.getRemaingLines(0);
         }
+
+        isPaused = false;
     };
 
     const showStartScreen = (): void => {
-        nextBlock = createNewBlock();
+        gameContext.nextBlock = BlockAction.createNewBlock();
         const colors: BlockType[] = ["BLUE", "CYAN", "GREEN", "ORANGE", "PURBLE", "RED", "YELLOW"];
-        for (let y: number = 0; y < playground.height; y++) {
+        for (let y: number = 0; y < gameContext.playground.height; y++) {
             const t: number = Math.floor(Math.random() * colors.length);
-            const x: number = Math.floor(Math.random() * playground.width);
-            playground.setBlockType(x, y, colors[t]);
+            const x: number = Math.floor(Math.random() * gameContext.playground.width);
+            gameContext.playground.setBlockType(x, y, colors[t]);
         }
         newGameButton.style.visibility = "visible";
-        dirtyPlayground = true;
-        dirtyNextBlock = true;
-    };
-
-    const initLevel = (): void => {
-        levelDiv.textContent = `Level ${level + 1}`;
-
-        remainingLines = Levels.getRemaingLines(level);
-        remainingDiv.textContent = `${remainingLines}`;
-
-        nextRandomRow = Levels.getNextDateRandomRow(level);
-        nextRandomPoint = Levels.getNextDateRandomPoint(level);
-
-        playground.clear();
-        const screen: Screen | undefined = Levels.getScreen(level);
-        if (screen) {
-            screen.forEach(t => playground.setBlockType(t[0], t[1], t[2]));
-        }
-        dirtyPlayground = true;
+        gameContext.dirtyPlayground = true;
+        gameContext.dirtyNextBlock = true;
     };
 
     const renderInit = (): void => {
-        render("GAMEOVER");
+        render(new StartScreenAction());
         window.requestAnimationFrame(draw);
     };
 
     // --- initialization
 
+    const isGameRunning = (): boolean => {
+        return gameAction.getState() != "GAMEOVER" && gameAction.getState() != "STARTSCREEN";
+    }
+
     const initKeyDownEvent = (): void => {
         document.addEventListener("keydown", e => {
-            if (state != "GAMEOVER") {
+            if (isGameRunning()) {
                 if (e.key.startsWith("Arrow")) {
                     e.preventDefault();
                 }
-                if (keyPressed != e.key) {
-                    keyPressed = e.key;
-                    keyPressedMax = 100;
-                    keyPressedCount = keyPressedMax;
+                if (gameContext.keyPressed != e.key) {
+                    gameContext.keyPressed = e.key;
+                    gameContext.keyPressedMax = 100;
+                    gameContext.keyPressedCount = gameContext.keyPressedMax;
                 }
             }
         });
         document.addEventListener("keyup", (e) => {
-            if (state != "GAMEOVER") {
+            if (isGameRunning()) {
                 if (e.key.startsWith("Arrow")) {
                     e.preventDefault();
                 }
                 if (e.key == "l") {
-                    increaseLevel();
-                    score = 0;
-                    lines = 0;
-                    scoreDiv.textContent = `Score ${score}`;
-                    linesDiv.textContent = `Lines ${lines}`;
-                    placeNewBlock();
+                    gameContext.level += 1;
+                    gameContext.score = 0;
+                    gameContext.lines = 0;
+                    gameAction = new InitLevelAction(0);
                 }
-                keyPressed = undefined;
+                gameContext.keyPressed = undefined;
             }
             isPaused = !isPaused && e.key == "p";
         });

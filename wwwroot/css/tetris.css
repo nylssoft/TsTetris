@@ -12,6 +12,7 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 18pt;
     color: white;
+    background-color: black;
 }
 
 .playground {
@@ -21,44 +22,49 @@ body {
     background-color: black;
 }
 
+.nextblock {
+    margin: 5pt;
+}
+
+
 .info {
     color: white;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 18pt;
     background-color: black;
     position: absolute;
-    left: 420px;
+    left: 390px;
     top: 50px;
-    width: 198px;
-    height: 290px;
+    width: 220px;
+    height: 525px;
     padding-left: 10px;
 }
 
 .arrow-left {
     position: absolute;
-    left: 516px;
-    top: 215px;
+    left: 416px;
+    top: 255px;
     border: 2px solid green;
 }
 
 .arrow-right {
     position: absolute;
-    left: 573px;
-    top: 215px;
+    left: 473px;
+    top: 255px;
     border: 2px solid green;
 }
 
 .arrow-up {
     position: absolute;
-    left: 545px;
-    top: 170px;
+    left: 445px;
+    top: 210px;
     border: 2px solid green;
 }
 
 .arrow-down {
     position: absolute;
-    left: 545px;
-    top: 260px;
+    left: 445px;
+    top: 300px;
     border: 2px solid green;
 }
 
@@ -76,8 +82,8 @@ body {
 
 .newgame {
     position: absolute;
-    left: 425px;
-    top: 290px;
+    left: 400px;
+    top: 360px;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 11pt;
     z-index: 1;
@@ -108,14 +114,8 @@ body {
     }
 
 .remainingInfo {
+    margin-top:50pt;
     color: orangered;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 48pt;
-    background-color: black;
-    position: absolute;
-    left: 420px;
-    top: 400px;
-    width: 198px;
-    height: 290px;
-    padding-left: 10px;
 }
