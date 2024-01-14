@@ -115,14 +115,31 @@ class Game {
     }
 
     private drawBorder(ctx: CanvasRenderingContext2D): void {
-        for (let y: number = 0; y <= this.pixelPerField * (this.gameContext!.playground.height + 1); y += this.pixelPerField) {
-            this.drawRect(ctx, 0, y, "BORDER");
-            this.drawRect(ctx, this.pixelPerField * (this.gameContext!.playground.width + 1), y, "BORDER");
-        }
-        for (let x: number = 1; x < this.pixelPerField * (this.gameContext!.playground.width + 1); x += this.pixelPerField) {
-            this.drawRect(ctx, x, 0, "BORDER");
-            this.drawRect(ctx, x, this.pixelPerField * (this.gameContext!.playground.height + 1), "BORDER");
-        }
+        let x: number = 0;
+        let y: number = 0;
+        let w: number = this.pixelPerField * (this.gameContext!.playground.width + 2);
+        let h: number = this.pixelPerField - this.borderWidth;
+
+        const colStart = "#FC6600";
+        const colMiddle = "#793902";
+        const colEnd = "#FFBF00";
+
+        const g: CanvasGradient = ctx.createLinearGradient(x, y, x + w, y + h);
+        g.addColorStop(0, colStart);
+        g.addColorStop(0.5, colMiddle);
+        g.addColorStop(1, colEnd);
+
+        ctx.fillStyle = g;
+        ctx.fillRect(x, y, w, h);
+        y = this.pixelPerField * (this.gameContext!.playground.height + 1) + this.borderWidth;
+        ctx.fillRect(x, y, w, h);
+        x = 0;
+        y = this.pixelPerField - this.borderWidth;
+        w = this.pixelPerField - this.borderWidth;
+        h = this.pixelPerField * this.gameContext!.playground.height + 2 * this.borderWidth;
+        ctx.fillRect(x, y, w, h);
+        x = this.pixelPerField * (this.gameContext!.playground.width + 1) + this.borderWidth;
+        ctx.fillRect(x, y, w, h);
     }
 
     private drawPlayground(ctx: CanvasRenderingContext2D): void {
