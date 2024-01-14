@@ -382,13 +382,13 @@ class Game {
         this.newGameButton.style.visibility = "hidden";
 
         const arrowDivLeft: HTMLDivElement = ControlUtils.createDiv(parent, "arrow-left");
-        this.createImage(arrowDivLeft, "/images/arrow-left-3.png", 32, "ArrowLeft", "Left");
+        this.createImage(arrowDivLeft, "arrow-left-3.png", 32, "ArrowLeft", "Left");
         const arrowDivRight: HTMLDivElement = ControlUtils.createDiv(parent, "arrow-right");
-        this.createImage(arrowDivRight, "/images/arrow-right-3.png", 32, "ArrowRight", "Right");
+        this.createImage(arrowDivRight, "arrow-right-3.png", 32, "ArrowRight", "Right");
         const arrowDivUp: HTMLDivElement = ControlUtils.createDiv(parent, "arrow-up");
-        this.createImage(arrowDivUp, "/images/arrow-up-3.png", 32, "ArrowUp", "Rotate");
+        this.createImage(arrowDivUp, "arrow-up-3.png", 32, "ArrowUp", "Rotate");
         const arrowDivDown: HTMLDivElement = ControlUtils.createDiv(parent, "arrow-down");
-        this.createImage(arrowDivDown, "/images/arrow-down-3.png", 32, "ArrowDown", "Drop");
+        this.createImage(arrowDivDown, "arrow-down-3.png", 32, "ArrowDown", "Drop");
 
         this.canvas = ControlUtils.create(parent, "canvas", "playground") as HTMLCanvasElement;
         this.canvas.width = this.pixelPerField * (this.gameContext!.playground.width + 2);
