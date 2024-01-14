@@ -204,12 +204,22 @@ export class MoveDownAction extends BlockAction {
 
 export class DropOneRowAction extends BlockAction {
 
+    animateColor: number = 250;
+
     getState(): State {
         return "DROPONEROW";
     }
 
     execute(gc: GameContext): GameAction {
+        if (this.animateColor > 0) {
+            this.animateColor -= 10;
+            gc.dirtyDropRow = true;
+            return this;
+        }
         if (!gc.playground.dropOneRow()) {
+            if (this.getState() === "DROPONEROW_MOVEBONUS") {
+                return new MoveBonusAction(gc.playground.getHighestRow() - 1);
+            }
             return this.placeNewBlock(gc);
         }
         gc.dirtyPlayground = true;
@@ -220,20 +230,8 @@ export class DropOneRowAction extends BlockAction {
 
 export class DropOneRowMoveBonusAction extends DropOneRowAction {
 
-    constructor() {
-        super();
-    }
-
     override getState(): State {
         return "DROPONEROW_MOVEBONUS";
-    }
-
-    execute(gc: GameContext): GameAction {
-        if (!gc.playground.dropOneRow()) {
-            return new MoveBonusAction(gc.playground.getHighestRow() - 1);
-        }
-        gc.dirtyPlayground = true;
-        return this;
     }
 
 }

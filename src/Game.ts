@@ -4,7 +4,7 @@ import { Block } from "./Blocks.js";
 import { Playground } from "./Playground.js";
 import { Levels } from "./Levels.js";
 import { GameContext } from "./GameContext.js";
-import { BlockAction, GameAction, InitLevelAction, MoveBonusAction, NewBlockAction, StartScreenAction } from "./GameActions.js";
+import { BlockAction, DropOneRowAction, GameAction, InitLevelAction, MoveBonusAction, NewBlockAction, StartScreenAction } from "./GameActions.js";
 
 class Game {
 
@@ -193,46 +193,73 @@ class Game {
         ctx.fillRect(x, y, w, h);
     }
 
+    private drawDropRow(ctx: CanvasRenderingContext2D): void {
+        if (this.gameAction!.getState() !== "DROPONEROW" && this.gameAction!.getState() !== "DROPONEROW_MOVEBONUS") {
+            return;
+        }
+        const dropOneRowAction: DropOneRowAction = this.gameAction as DropOneRowAction;
+        const c = dropOneRowAction.animateColor; 
+        if (c >= 0) {
+            const offx: number = this.pixelPerField;
+            const offy: number = offx;
+            this.gameContext!.playground.scroll.forEach(row => {
+                const x = offx;
+                const y = offy + row * this.pixelPerField;
+                const w = this.gameContext!.playground.width * this.pixelPerField;
+                const h = this.pixelPerField;
+                ctx.fillStyle = `rgb(${c},${c},${c})`;
+                ctx.fillRect(x, y, w, h);
+            });
+        }
+    }
+
     private draw(): void {
-        if (game.isPaused || !game.gameContext || !game.gameAction) {
+        if (this.isPaused || !this.gameContext || !this.gameAction) {
             window.requestAnimationFrame(() => this.draw());
             return;
         }
-        game.gameAction = game.gameAction.execute(game.gameContext);
-        const ctx: CanvasRenderingContext2D = game.canvas!.getContext("2d")!;
-        if (game.gameContext.dirtyBorder) {
-            game.drawBorder(ctx);
-            game.gameContext.dirtyBorder = false;
+        this.gameAction = this.gameAction.execute(this.gameContext);
+        const ctx: CanvasRenderingContext2D = this.canvas!.getContext("2d")!;
+        if (this.gameContext.dirtyBorder) {
+            this.drawBorder(ctx);
+            this.gameContext.dirtyBorder = false;
         }
-        if (game.gameContext.dirtyPlayground && game.gameContext.playground) {
-            game.drawPlayground(ctx);
-            game.gameContext.dirtyPlayground = false;
+        if (this.gameContext.dirtyPlayground && this.gameContext.playground) {
+            this.drawPlayground(ctx);
+            this.gameContext.dirtyPlayground = false;
         }
-        if (game.gameContext.dirtyBlock && game.gameContext.block) {
-            game.drawBlock(ctx);
-            game.gameContext.dirtyBlock = false;
+        if (this.gameContext.dirtyBlock && this.gameContext.block) {
+            this.drawBlock(ctx);
+            this.gameContext.dirtyBlock = false;
         }
-        if (game.gameContext.dirtyBonus) {
-            game.drawBonus(ctx);
-            game.gameContext.dirtyBonus = false;
+        if (this.gameContext.dirtyBonus) {
+            this.drawBonus(ctx);
+            this.gameContext.dirtyBonus = false;
         }
-        if (game.gameContext.dirtyNextBlock && game.gameContext.nextBlock) {
-            const ctxnext: CanvasRenderingContext2D = game.canvasNextBlock!.getContext("2d")!;
-            ctxnext.clearRect(0, 0, game.canvasNextBlock!.width, game.canvasNextBlock!.height);
-            game.drawNextBlock(ctxnext);
-            game.gameContext.dirtyNextBlock = false;
+        if (this.gameContext.dirtyDropRow) {
+            this.drawDropRow(ctx);
+            this.gameContext.dirtyDropRow = false;
         }
-        if (game.gameContext.dirtyInfo) {
-            game.scoreDiv!.textContent = `Score ${game.gameContext.score}`;
-            game.levelDiv!.textContent = `Level ${game.gameContext.level + 1}`;
-            game.linesDiv!.textContent = `Lines ${game.gameContext.lines}`;
-            game.remainingDiv!.textContent = game.gameContext!.remainingLines > 0 ? `${game.gameContext.remainingLines}` : "";
-            if (game.gameAction.getState() == "GAMEOVER") {
-                game.gameOverDiv!.textContent = "GAME OVER";
-                game.gameOverDiv!.style.visibility = "visible";
-                game.newGameButton!.style.visibility = "visible";
+        if (this.gameContext.dirtyNextBlock && this.gameContext.nextBlock) {
+            const ctxnext: CanvasRenderingContext2D = this.canvasNextBlock!.getContext("2d")!;
+            ctxnext.clearRect(0, 0, this.canvasNextBlock!.width, this.canvasNextBlock!.height);
+            this.drawNextBlock(ctxnext);
+            this.gameContext.dirtyNextBlock = false;
+        }
+        if (this.gameContext.dirtyInfo) {
+            this.levelDiv!.textContent = `Level ${this.gameContext.level + 1}`;
+            this.scoreDiv!.textContent = `Score ${this.gameContext.score}`;
+            this.linesDiv!.textContent = `Lines ${this.gameContext.lines}`;
+            this.remainingDiv!.textContent = this.gameContext!.remainingLines > 0 ? `Remain ${this.gameContext.remainingLines}` : "";
+            if (this.gameAction.getState() == "GAMEOVER") {
+                this.gameOverDiv!.textContent = "GAME OVER";
+                this.gameOverDiv!.style.visibility = "visible";
+                this.newGameButton!.style.visibility = "visible";
             }
-            game.gameContext.dirtyInfo = false;
+            else if (this.gameAction.getState() == "MOVEBONUS") {
+                this.remainingDiv!.textContent = "Congrats!";
+            }
+            this.gameContext.dirtyInfo = false;
         }
         window.requestAnimationFrame(() => this.draw());
     }
@@ -341,10 +368,10 @@ class Game {
 
     private renderTetris(parent: HTMLElement): void {
         const info: HTMLDivElement = ControlUtils.createDiv(parent, "info");
-        this.scoreDiv = ControlUtils.createDiv(info);
-        this.scoreDiv.textContent = `Score ${this.gameContext!.score}`;
         this.levelDiv = ControlUtils.createDiv(info);
         this.levelDiv.textContent = `Level ${this.gameContext!.level + 1}`;
+        this.scoreDiv = ControlUtils.createDiv(info);
+        this.scoreDiv.textContent = `Score ${this.gameContext!.score}`;
         this.linesDiv = ControlUtils.createDiv(info);
         this.linesDiv.textContent = `Lines ${this.gameContext!.lines}`;
 
@@ -403,6 +430,7 @@ class Game {
 
             dirtyBlock: true,
             dirtyBonus: true,
+            dirtyDropRow: true,
             dirtyBorder: true,
             dirtyInfo: true,
             dirtyNextBlock: true,

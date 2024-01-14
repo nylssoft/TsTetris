@@ -30,6 +30,7 @@ export type GameContext = {
     dirtyBlock: boolean;
     dirtyNextBlock: boolean;
     dirtyBonus: boolean;
+    dirtyDropRow: boolean;
     dirtyInfo: boolean;
 
     clearPoints: Point[];

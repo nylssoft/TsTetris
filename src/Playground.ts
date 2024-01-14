@@ -5,7 +5,7 @@ export class Playground {
 
     private readonly rows: Row[];
 
-    private readonly scroll: number[];
+    readonly scroll: number[];
 
     private static readonly COLORS: BlockType[] = ["BLUE", "CYAN", "GREEN", "ORANGE", "PURBLE", "RED", "YELLOW"];
 
