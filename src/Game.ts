@@ -394,10 +394,10 @@ class Game {
         this.canvas.width = this.pixelPerField * (this.gameContext!.playground.width + 2);
         this.canvas.height = this.pixelPerField * (this.gameContext!.playground.height + 2);
 
-        this.canvas.addEventListener("touchstart", this.onCanvasTouchStart, { passive: false });
-        this.canvas.addEventListener("touchend", this.onCanvasTouchEnd, { passive: false });
-        this.canvas.addEventListener("touchcancel", this.onCanvasTouchEnd, { passive: false });
-        this.canvas.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+        this.canvas.addEventListener("touchstart", (e: TouchEvent) => this.onCanvasTouchStart(e), { passive: false });
+        this.canvas.addEventListener("touchend", (e: TouchEvent) => this.onCanvasTouchEnd(e), { passive: false });
+        this.canvas.addEventListener("touchcancel", (e: TouchEvent) => this.onCanvasTouchEnd(e), { passive: false });
+        this.canvas.addEventListener("touchmove", (e: TouchEvent) => e.preventDefault(), { passive: false });
 
         this.canvasNextBlock = ControlUtils.create(info, "canvas", "nextblock") as HTMLCanvasElement;
         this.canvasNextBlock.width = this.pixelPerField * 6;
@@ -405,6 +405,12 @@ class Game {
 
         const remainingDivInfo: HTMLDivElement = ControlUtils.createDiv(info, "remainingInfo");
         this.remainingDiv = ControlUtils.createDiv(remainingDivInfo);
+    }
+
+    private renderCopyright(parent: HTMLElement): void {
+        const div: HTMLDivElement = ControlUtils.createDiv(parent, "copyright");
+        ControlUtils.create(div, "span", undefined, "Tetris (Arcade) \u00A9 2024 ");
+        ControlUtils.createA(div, undefined, `${location.origin}/view?page=copyright`, "Niels Stockfleth");
     }
 
     private render(startGameAction: GameAction): void {
@@ -443,8 +449,9 @@ class Game {
         };
 
         ControlUtils.removeAllChildren(document.body);
-        this.renderTetris(ControlUtils.createDiv(document.body));
-
+        const mainDiv: HTMLDivElement = ControlUtils.createDiv(document.body);
+        this.renderTetris(mainDiv);
+        this.renderCopyright(mainDiv);
         if (this.gameAction.getState() === "STARTSCREEN") {
             this.showStartScreen();
         }
