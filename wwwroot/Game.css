@@ -117,3 +117,68 @@ body {
     margin-top:50pt;
     color: white;
 }
+
+@media (max-width: 480px) {
+
+    .button {
+        font-size: 11pt;
+    }
+
+    body {
+        font-size: 11pt;
+    }
+
+    .playground {
+        left: 10px;
+    }
+
+    .info {
+        left: 230px;
+        top: 50px;
+        width: 100px;
+        height: 160px;
+        padding-left: 0px;
+        font-size: 11pt;
+    }
+
+    .arrow-left {
+        left: 230px;
+        top: 205px;
+        border: 2px solid green;
+    }
+
+    .arrow-right {
+        left: 287px;
+        top: 205px;
+        border: 2px solid green;
+    }
+
+    .arrow-up {
+        left: 258px;
+        top: 160px;
+        border: 2px solid green;
+    }
+
+    .arrow-down {
+        left: 258px;
+        top: 250px;
+        border: 2px solid green;
+    }
+
+    .gameover {
+        left: 30px;
+        top: 70px;
+        padding: 5pt;
+    }
+
+    .newgame {
+        left: 230px;
+        top: 310px;
+        padding: 10pt;
+    }
+
+    .remainingInfo {
+        margin-top: 60pt;
+    }
+
+}

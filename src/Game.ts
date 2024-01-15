@@ -512,8 +512,14 @@ class Game {
     // --- public API
 
     init(): void  {
-        this.pixelPerField = 24;
-        this.borderWidth = 3;
+        if (ControlUtils.isMobile()) {
+            this.pixelPerField = 18;
+            this.borderWidth = 2;
+        }
+        else {
+            this.pixelPerField = 24;
+            this.borderWidth = 3;
+        }
         this.initKeyDownEvent();
         this.renderInit();
     }

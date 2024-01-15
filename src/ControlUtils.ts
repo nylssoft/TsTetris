@@ -39,4 +39,6 @@
         }
     }
 
+    static isMobile = (): boolean => window.matchMedia('(max-width: 480px)').matches;
+
 }
