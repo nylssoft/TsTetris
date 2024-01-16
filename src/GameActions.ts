@@ -1,4 +1,4 @@
-﻿import { Screen, State } from "./Types.js";
+﻿import { BlockType, Screen, State } from "./Types.js";
 import { Block, IBlock, JBlock, LBlock, OBlock, SBlock, TBlock, ZBlock } from "./Blocks.js";
 import { Levels } from "./Levels.js";
 import { GameContext } from "./GameContext.js";
@@ -33,6 +33,12 @@ export abstract class BlockAction implements GameAction {
             gc.keyPressedCount = 0;
             gc.dirtyBlock = true;
             gc.dirtyNextBlock = true;
+            let cnt: number | undefined = gc.statistic.get(newBlock.blockType);
+            if (!cnt) {
+                cnt = 0;
+            }
+            gc.statistic.set(newBlock.blockType, cnt + 1);
+            gc.dirtyStatistics = true;
             return new MoveDownAction();
         }
         // cannot place block => game over
@@ -322,6 +328,7 @@ export class InitLevelAction implements GameAction {
             }
             gc.dirtyPlayground = true;
             gc.dirtyInfo = true;
+            gc.statistic = new Map<BlockType, number>();
             return new NewBlockAction();
         }
         return this;

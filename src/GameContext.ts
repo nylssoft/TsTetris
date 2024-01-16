@@ -1,4 +1,4 @@
-﻿import { Point } from "./Types.js";
+﻿import { BlockType, Point } from "./Types.js";
 import { Block } from "./Blocks.js";
 import { Playground } from "./Playground.js";
 
@@ -32,7 +32,9 @@ export type GameContext = {
     dirtyBonus: boolean;
     dirtyDropRow: boolean;
     dirtyInfo: boolean;
+    dirtyStatistics: boolean,
 
     clearPoints: Point[];
 
+    statistic: Map<BlockType, number>;
 };

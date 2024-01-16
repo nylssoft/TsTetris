@@ -8,22 +8,23 @@ import { BlockAction, DropOneRowAction, GameAction, InitLevelAction, MoveBonusAc
 
 class Game {
 
-    private canvas: HTMLCanvasElement | undefined;
-    private scoreDiv: HTMLDivElement | undefined;
-    private levelDiv: HTMLDivElement | undefined;
-    private linesDiv: HTMLDivElement | undefined;
-    private gameOverDiv: HTMLDivElement | undefined;
-    private newGameButton: HTMLButtonElement | undefined;
-    private canvasNextBlock: HTMLCanvasElement | undefined;
-    private remainingDiv: HTMLDivElement | undefined;
+    private canvas?: HTMLCanvasElement;
+    private scoreDiv?: HTMLDivElement;
+    private levelDiv?: HTMLDivElement;
+    private linesDiv?: HTMLDivElement;
+    private gameOverDiv?: HTMLDivElement;
+    private newGameButton?: HTMLButtonElement;
+    private canvasNextBlock?: HTMLCanvasElement;
+    private canvasStatistics?: HTMLCanvasElement;
+    private remainingDiv?: HTMLDivElement;
 
     // --- state
 
-    private gameAction: GameAction | undefined;
-    private gameContext: GameContext | undefined;
+    private gameAction?: GameAction;
+    private gameContext?: GameContext;
 
     private isPaused: boolean = true;
-    private blockTouchY: number | undefined;
+    private blockTouchY?: number;
 
     private pixelPerField: number = 0;
     private borderWidth: number = 0;
@@ -213,6 +214,37 @@ class Game {
         }
     }
 
+    private drawStatistics(): void {
+        const ctx: CanvasRenderingContext2D = this.canvasStatistics!.getContext("2d")!;
+        ctx.clearRect(0, 0, this.canvasStatistics!.width, this.canvasStatistics!.height);
+        const w: number = Math.floor(this.canvasStatistics!.width / Playground.COLORS.length);
+        const inc: number = 30;
+        let diff: number = 0;
+        for (let elem of this.gameContext!.statistic) {
+            const h = elem[1] * inc;
+            const y = this.canvasStatistics!.height - h;
+            if (y < diff) {
+                diff = y;
+            }
+        }
+        let scale: number = 1;
+        if (diff < 0) {
+            scale = (this.canvasStatistics!.height) / (this.canvasStatistics!.height + Math.abs(diff));
+        }
+        let colCnt = 0;
+        for (let col of Playground.COLORS) {
+            const cnt:number | undefined = this.gameContext!.statistic.get(col);
+            if (cnt) {
+                const h: number = cnt * inc * scale;
+                const x: number = colCnt * w + this.borderWidth;
+                const y: number = this.canvasStatistics!.height - h;
+                ctx.fillStyle = Game.BLOCK_COLORS[col].center;
+                ctx.fillRect(x, y, w - 2 * this.borderWidth, h);
+            }
+            colCnt++;
+        }
+    }
+
     private draw(): void {
         if (this.isPaused || !this.gameContext || !this.gameAction) {
             window.requestAnimationFrame(() => this.draw());
@@ -261,6 +293,10 @@ class Game {
             }
             this.gameContext.dirtyInfo = false;
         }
+        if (this.gameContext.dirtyStatistics) {
+            this.drawStatistics();
+            this.gameContext.dirtyStatistics = false;
+        }        
         window.requestAnimationFrame(() => this.draw());
     }
 
@@ -405,6 +441,8 @@ class Game {
 
         const remainingDivInfo: HTMLDivElement = ControlUtils.createDiv(info, "remainingInfo");
         this.remainingDiv = ControlUtils.createDiv(remainingDivInfo);
+
+        this.canvasStatistics = ControlUtils.create(parent, "canvas", "statistics") as HTMLCanvasElement;
     }
 
     private renderCopyright(parent: HTMLElement): void {
@@ -441,11 +479,14 @@ class Game {
             dirtyInfo: true,
             dirtyNextBlock: true,
             dirtyPlayground: true,
+            dirtyStatistics: true,
 
             level: 0,
             lines: 0,
             score: 0,
             remainingLines: 0,
+
+            statistic: new Map<BlockType, number>()
         };
 
         ControlUtils.removeAllChildren(document.body);

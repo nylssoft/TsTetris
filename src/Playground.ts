@@ -7,7 +7,7 @@ export class Playground {
 
     readonly scroll: number[];
 
-    private static readonly COLORS: BlockType[] = ["BLUE", "CYAN", "GREEN", "ORANGE", "PURBLE", "RED", "YELLOW"];
+    public static readonly COLORS: BlockType[] = ["BLUE", "CYAN", "GREEN", "ORANGE", "PURBLE", "RED", "YELLOW"];
 
     constructor(public readonly width: number, public readonly height: number) {
         this.rows = new Array<Row>(this.height);
