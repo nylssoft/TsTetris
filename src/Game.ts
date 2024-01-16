@@ -410,7 +410,7 @@ class Game {
     private renderCopyright(parent: HTMLElement): void {
         const div: HTMLDivElement = ControlUtils.createDiv(parent, "copyright");
         ControlUtils.create(div, "span", undefined, "Tetris (Arcade) \u00A9 2024 ");
-        ControlUtils.createA(div, undefined, `${location.origin}/view?page=copyright`, "Niels Stockfleth");
+        ControlUtils.createA(div, undefined, "https://github.com/nylssoft/TsTetris", "Niels Stockfleth");
     }
 
     private render(startGameAction: GameAction): void {
