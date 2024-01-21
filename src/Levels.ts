@@ -1,4 +1,4 @@
-﻿import { Screen, ScreenPoint } from "./Types.js";
+﻿import { Screen, ScreenPoint } from "./Types";
 
 export class Levels {
 

@@ -1,5 +1,5 @@
-﻿import { ArrayUtils } from "./ArrayUtils.js";
-import { BlockType, Point, Row } from "./Types.js"
+﻿import { ArrayUtils } from "./ArrayUtils";
+import { BlockType, Point, Row } from "./Types"
 
 export class Playground {
 

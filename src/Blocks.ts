@@ -1,5 +1,5 @@
-﻿import { BlockType, Orientation, Point } from "./Types.js";
-import { Playground } from "./Playground.js";
+﻿import { BlockType, Orientation, Point } from "./Types";
+import { Playground } from "./Playground";
 
 export abstract class Block {
 

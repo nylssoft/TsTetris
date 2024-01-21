@@ -1,10 +1,15 @@
-﻿import { BlockColor, BlockType, Point } from "./Types.js";
-import { ControlUtils } from "./ControlUtils.js";
-import { Block } from "./Blocks.js";
-import { Playground } from "./Playground.js";
-import { Levels } from "./Levels.js";
-import { GameContext } from "./GameContext.js";
-import { BlockAction, DropOneRowAction, GameAction, InitLevelAction, MoveBonusAction, NewBlockAction, StartScreenAction } from "./GameActions.js";
+﻿import "./Game.css";
+import arrowDown from "./arrow-down-3.png";
+import arrowUp from "./arrow-up-3.png";
+import arrowLeft from "./arrow-left-3.png";
+import arrowRight from "./arrow-right-3.png";
+import { BlockColor, BlockType, Point } from "./Types";
+import { ControlUtils } from "./ControlUtils";
+import { Block } from "./Blocks";
+import { Playground } from "./Playground";
+import { Levels } from "./Levels";
+import { GameContext } from "./GameContext";
+import { BlockAction, DropOneRowAction, GameAction, InitLevelAction, MoveBonusAction, NewBlockAction, StartScreenAction } from "./GameActions";
 
 class Game {
 
@@ -418,13 +423,13 @@ class Game {
         this.newGameButton.style.visibility = "hidden";
 
         const arrowDivLeft: HTMLDivElement = ControlUtils.createDiv(parent, "arrow-left");
-        this.createImage(arrowDivLeft, "arrow-left-3.png", 32, "ArrowLeft", "Left");
+        this.createImage(arrowDivLeft, arrowLeft, 32, "ArrowLeft", "Left");
         const arrowDivRight: HTMLDivElement = ControlUtils.createDiv(parent, "arrow-right");
-        this.createImage(arrowDivRight, "arrow-right-3.png", 32, "ArrowRight", "Right");
+        this.createImage(arrowDivRight, arrowRight, 32, "ArrowRight", "Right");
         const arrowDivUp: HTMLDivElement = ControlUtils.createDiv(parent, "arrow-up");
-        this.createImage(arrowDivUp, "arrow-up-3.png", 32, "ArrowUp", "Rotate");
+        this.createImage(arrowDivUp, arrowUp, 32, "ArrowUp", "Rotate");
         const arrowDivDown: HTMLDivElement = ControlUtils.createDiv(parent, "arrow-down");
-        this.createImage(arrowDivDown, "arrow-down-3.png", 32, "ArrowDown", "Drop");
+        this.createImage(arrowDivDown, arrowDown, 32, "ArrowDown", "Drop");
 
         this.canvas = ControlUtils.create(parent, "canvas", "playground") as HTMLCanvasElement;
         this.canvas.width = this.pixelPerField * (this.gameContext!.playground.width + 2);

@@ -1,6 +1,6 @@
-﻿import { BlockType, Point } from "./Types.js";
-import { Block } from "./Blocks.js";
-import { Playground } from "./Playground.js";
+﻿import { BlockType, Point } from "./Types";
+import { Block } from "./Blocks";
+import { Playground } from "./Playground";
 
 export type GameContext = {
 

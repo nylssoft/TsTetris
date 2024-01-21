@@ -1,7 +1,7 @@
-﻿import { BlockType, Screen, State } from "./Types.js";
-import { Block, IBlock, JBlock, LBlock, OBlock, SBlock, TBlock, ZBlock } from "./Blocks.js";
-import { Levels } from "./Levels.js";
-import { GameContext } from "./GameContext.js";
+﻿import { BlockType, Screen, State } from "./Types";
+import { Block, IBlock, JBlock, LBlock, OBlock, SBlock, TBlock, ZBlock } from "./Blocks";
+import { Levels } from "./Levels";
+import { GameContext } from "./GameContext";
 
 export interface GameAction {
 
