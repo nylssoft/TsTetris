@@ -59,6 +59,9 @@
                 if (e.code === 'Enter') {
                     action(input);
                 }
+                else if (e.keyCode === 13) {
+                    action(input);
+                }
             });
         }
         return input;
