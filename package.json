@@ -7,12 +7,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --config webpack.prod.js",
     "build-dev": "webpack --config webpack.dev.js",
+    "watch": "webpack watch --config webpack.dev.js",
     "start": "webpack serve --open --config webpack.dev.js"
   },
   "keywords": [],
   "author": "Niels Stockfleth",
   "license": "ISC",
   "devDependencies": {
+    "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^6.9.1",
     "html-webpack-plugin": "^5.6.0",
     "style-loader": "^3.3.4",

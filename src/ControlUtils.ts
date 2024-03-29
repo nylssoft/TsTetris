@@ -43,6 +43,27 @@
         return b;
     }
 
+    static createInputField(parent: HTMLElement, title: string, action?: (b: HTMLInputElement) => void, classname?: string, size?: number, maxlength?: number) {
+        const input: HTMLInputElement = ControlUtils.create(parent, "input", classname) as HTMLInputElement;
+        input.title = title;
+        input.setAttribute("type", "text");
+        if (size) {
+            input.setAttribute("size", size.toString());
+        }
+        if (maxlength) {
+            input.setAttribute("maxlength", maxlength.toString());
+        }
+        if (action) {
+            input.addEventListener("keyup", e => {
+                e.preventDefault();
+                if (e.code === 'Enter') {
+                    action(input);
+                }
+            });
+        }
+        return input;
+    }
+
     static removeAllChildren(parent: HTMLElement): void {
         const node: HTMLElement = parent;
         while (node.lastChild) {

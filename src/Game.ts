@@ -3,13 +3,21 @@ import arrowDown from "./arrow-down-3.png";
 import arrowUp from "./arrow-up-3.png";
 import arrowLeft from "./arrow-left-3.png";
 import arrowRight from "./arrow-right-3.png";
-import { BlockColor, BlockType, Point } from "./Types";
+import { BlockColor, BlockType, Point, State } from "./Types";
 import { ControlUtils } from "./ControlUtils";
 import { Block } from "./Blocks";
 import { Playground } from "./Playground";
 import { Levels } from "./Levels";
 import { GameContext } from "./GameContext";
-import { BlockAction, DropOneRowAction, GameAction, InitLevelAction, MoveBonusAction, NewBlockAction, StartScreenAction } from "./GameActions";
+import { DropOneRowAction, GameAction, InitLevelAction, MoveBonusAction, NewBlockAction, StartScreenAction } from "./GameActions";
+
+type HighScoreEntry = {
+    name: string;
+    score: number;
+    lines: number;
+    level: number;
+    created: string;
+};
 
 class Game {
 
@@ -22,6 +30,13 @@ class Game {
     private canvasNextBlock?: HTMLCanvasElement;
     private canvasStatistics?: HTMLCanvasElement;
     private remainingDiv?: HTMLDivElement;
+
+    // --- highscore
+
+    private highScoreDiv?: HTMLElement;
+    private addHighScoreDiv?: HTMLElement;
+    private inputUsername?: HTMLInputElement;
+    private highScores?: HighScoreEntry[];
 
     // --- state
 
@@ -292,6 +307,7 @@ class Game {
                 this.gameOverDiv!.textContent = "GAME OVER";
                 this.gameOverDiv!.style.visibility = "visible";
                 this.newGameButton!.style.visibility = "visible";
+                this.showHighscoresAsync();
             }
             else if (this.gameAction.getState() == "MOVEBONUS") {
                 this.remainingDiv!.textContent = "Congrats!";
@@ -450,12 +466,6 @@ class Game {
         this.canvasStatistics = ControlUtils.create(parent, "canvas", "statistics") as HTMLCanvasElement;
     }
 
-    private renderCopyright(parent: HTMLElement): void {
-        const div: HTMLDivElement = ControlUtils.createDiv(parent, "copyright");
-        ControlUtils.create(div, "span", undefined, "Tetris (Arcade) \u00A9 2024 ");
-        ControlUtils.createA(div, undefined, "https://github.com/nylssoft/TsTetris", "Niels Stockfleth");
-    }
-
     private render(startGameAction: GameAction): void {
 
         this.isPaused = startGameAction.getState() === "NEWBLOCK";
@@ -497,7 +507,6 @@ class Game {
         ControlUtils.removeAllChildren(document.body);
         const mainDiv: HTMLDivElement = ControlUtils.createDiv(document.body);
         this.renderTetris(mainDiv);
-        this.renderCopyright(mainDiv);
         if (this.gameAction.getState() === "STARTSCREEN") {
             this.showStartScreen();
         }
@@ -506,16 +515,10 @@ class Game {
         }
 
         this.isPaused = false;
+        this.renderHighScoresAsync(mainDiv);
     }
 
     private showStartScreen(): void {
-        this.gameContext!.nextBlock = BlockAction.createNewBlock();
-        const colors: BlockType[] = ["BLUE", "CYAN", "GREEN", "ORANGE", "PURBLE", "RED", "YELLOW"];
-        for (let y: number = 0; y < this.gameContext!.playground.height; y++) {
-            const t: number = Math.floor(Math.random() * colors.length);
-            const x: number = Math.floor(Math.random() * this.gameContext!.playground.width);
-            this.gameContext!.playground.setBlockType(x, y, colors[t]);
-        }
         this.newGameButton!.style.visibility = "visible";
         this.gameContext!.dirtyPlayground = true;
         this.gameContext!.dirtyNextBlock = true;
@@ -560,6 +563,108 @@ class Game {
             }
             this.isPaused = !this.isPaused && e.key == "p";
         });
+    }
+
+    // --- highscore handling
+    
+    private async showHighscoresAsync(): Promise<void> {
+        const resp: Response = await window.fetch("/api/tstetris/highscore");
+        if (resp.ok) {
+            const json = await resp.json();
+            this.highScores = json as HighScoreEntry[];
+            if (this.gameContext!.score > 0 && (this.highScores.length < 10 || this.highScores[9].score < this.gameContext!.score)) {
+                this.addHighScoreDiv!.style.visibility = "visible";
+                this.inputUsername!.focus();
+            }
+            else {
+                this.highScoreDiv!.style.visibility = this.highScores.length > 0 ? "visible" : "hidden";
+            }
+        }
+    }
+
+    private async addHighScoreAsync(): Promise<void> {
+        const name = this.inputUsername!.value.trim();
+        if (name.length > 0) {
+            const requestInit: RequestInit = {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "Name": name,
+                    "Score": this.gameContext!.score,
+                    "Lines": this.gameContext!.lines,
+                    "Level": this.gameContext!.level
+                })
+            };
+            const resp: Response = await window.fetch("/api/tstetris/highscore", requestInit);
+            if (resp.ok) {
+                this.addHighScoreDiv!.style.visibility = "hidden";
+                await this.renderHighScoreEntriesAsync();
+            }
+        }
+        this.highScoreDiv!.style.visibility = this.highScores!.length > 0 ? "visible" : "hidden";
+    }
+
+    private async renderHighScoresAsync(parent: HTMLElement): Promise<void> {
+        this.highScoreDiv = ControlUtils.createDiv(parent, "highscores");
+        this.highScoreDiv.style.visibility = "hidden";
+        this.addHighScoreDiv = ControlUtils.createDiv(parent, "addhighscore");
+        this.addHighScoreDiv.style.visibility = "hidden";
+        const msgDiv: HTMLDivElement = ControlUtils.createDiv(this.addHighScoreDiv, undefined);
+        msgDiv.textContent = "Congrats!";
+        this.inputUsername = ControlUtils.createInputField(this.addHighScoreDiv, "Name", () => this.addHighScoreAsync(), "username-input", 10, 10);
+        await this.renderHighScoreEntriesAsync();
+    }
+
+    private async renderHighScoreEntriesAsync(): Promise<void> {
+        ControlUtils.removeAllChildren(this.highScoreDiv!);
+        this.highScoreDiv!.style.visibility = "hidden";
+        const resp: Response = await window.fetch("/api/tstetris/highscore");
+        if (resp.ok) {
+            const json = await resp.json();
+            this.highScores = json as HighScoreEntry[];
+            let pos: number = 1;
+            this.highScores.forEach(hs => {
+                const e: HTMLDivElement = ControlUtils.createDiv(this.highScoreDiv!, "highscore");
+                e.textContent = `${pos}. ${hs.name} - ${hs.score}`;
+                let lstr = "Lines";
+                if (hs.lines == 1) lstr = "Line";
+                const dstr = this.format_date_string(hs.created);
+                e.title = `Score ${hs.score}. Level ${hs.level + 1}. ${hs.lines} ${lstr}. Game at ${dstr}.`;
+                pos++;
+            });
+            const state: State = this.gameAction!.getState();
+            if (this.highScores.length > 0 && (state === "STARTSCREEN" || state === "GAMEOVER")) {
+                this.highScoreDiv!.style.visibility = "visible";
+            }
+        }
+    }
+
+    private format_date(dt: any, options?: any, mode?: string): string {
+        let d;
+        if (typeof dt === "string" && dt.length > 0) {
+            d = new Date(dt);
+        }
+        else if (typeof dt === "object") {
+            d = dt;
+        }
+        if (d) {
+            const locale: string = navigator.language;
+            if (mode === "time") {
+                return d.toLocaleTimeString(locale, options);
+            }
+            if (mode === "string") {
+                return d.toLocaleString(locale, options);
+            }
+            return d.toLocaleDateString(locale, options);
+        }
+        return "";
+    }    
+
+    private format_date_string(dt: any, options?: any): string {
+        return this.format_date(dt, options, "string");
     }
 
     // --- public API

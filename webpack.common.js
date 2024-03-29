@@ -1,10 +1,12 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: './src/Game.ts',
     plugins: [
-        new HtmlWebpackPlugin({title: 'Tetris (Arcade)'})
+        new HtmlWebpackPlugin({title: 'Tetris (Arcade)'}),
+        new CopyPlugin({patterns: [{ from: "static", to: "api/tstetris" }]}),
     ],
     output: {
         filename: '[name].[contenthash].js',

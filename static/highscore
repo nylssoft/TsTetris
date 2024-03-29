@@ -1,0 +1,72 @@
+[
+    {
+        "name": "Ron",
+        "score": 670900,
+        "lines": 467,
+        "level": 46,
+        "created": "2022-11-27T14:47:24Z"
+    },
+    {
+        "name": "Niels",
+        "score": 98600,
+        "lines": 171,
+        "level": 17,
+        "created": "2023-08-11T15:06:01.821553Z"
+    },
+    {
+        "name": "Frodo",
+        "score": 94780,
+        "lines": 174,
+        "level": 17,
+        "created": "2023-11-03T17:35:50.51629Z"
+    },
+    {
+        "name": "Teuroeuro",
+        "score": 58840,
+        "lines": 136,
+        "level": 13,
+        "created": "2023-11-25T16:48:33.070062Z"
+    },
+    {
+        "name": "Niels",
+        "score": 49860,
+        "lines": 143,
+        "level": 14,
+        "created": "2023-09-23T06:05:03.914245Z"
+    },
+    {
+        "name": "H",
+        "score": 24880,
+        "lines": 63,
+        "level": 6,
+        "created": "2024-03-07T22:30:27.668843Z"
+    },
+    {
+        "name": "V",
+        "score": 1000,
+        "lines": 79,
+        "level": 7,
+        "created": "2024-03-07T23:04:40.917718Z"
+    },
+    {
+        "name": "Arcade",
+        "score": 100,
+        "lines": 86,
+        "level": 8,
+        "created": "2024-01-07T10:20:58.168553Z"
+    },
+    {
+        "name": "Rudi",
+        "score": 10,
+        "lines": 90,
+        "level": 9,
+        "created": "2024-01-05T15:19:13.222742Z"
+    },
+    {
+        "name": "Cari Cari",
+        "score": 1,
+        "lines": 83,
+        "level": 8,
+        "created": "2023-12-16T18:44:15.621079Z"
+    }
+]
