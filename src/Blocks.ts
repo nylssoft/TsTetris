@@ -86,7 +86,6 @@ export class LBlock extends Block {
 
     rotate(playground: Playground): boolean {
         if (!super.rotate(playground)) {
-            console.log(this);
             if (this.orientation == 2 && this.x == 0) {
                 return this.move(playground, this.x + 1, this.y, this._getNextOrientation());
             }
@@ -123,7 +122,6 @@ export class JBlock extends Block {
 
     rotate(playground: Playground): boolean {
         if (!super.rotate(playground)) {
-            console.log(this);
             if (this.orientation == 2 && this.x == 1) {
                 if (this.move(playground, this.x + 1, this.y, this._getNextOrientation())) {
                     this.move(playground, this.x - 1, this.y);
