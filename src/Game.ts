@@ -49,6 +49,9 @@ class Game {
     private pixelPerField: number = 0;
     private borderWidth: number = 0;
 
+    private lastActionTime?: DOMHighResTimeStamp;
+    private lastActionElapsed: number = 0;
+
     private static readonly BLOCK_COLORS = {
         "EMPTY": { center: "#000000", leftright: "#000000", top: "#000000", bottom: "#000000" },
         "BORDER": { center: "#787878", leftright: "#a1a2a1", top: "#d7d7d7", bottom: "#373737" },
@@ -266,8 +269,23 @@ class Game {
     }
 
     private draw(): void {
+        window.requestAnimationFrame(() => this.draw());
+        const now: DOMHighResTimeStamp = performance.now();
+        if (this.lastActionTime == undefined) {
+            this.lastActionTime = now;
+            this.lastActionElapsed = 0;
+            return;
+        }
+        this.lastActionElapsed += now - this.lastActionTime;
+        this.lastActionTime = now;
+        while (this.lastActionElapsed > 16.66) {
+            this.actionAndDraw();
+            this.lastActionElapsed -= 16.66;
+        }
+    }
+
+    private actionAndDraw(): void {
         if (this.isPaused || !this.gameContext || !this.gameAction) {
-            window.requestAnimationFrame(() => this.draw());
             return;
         }
         this.gameAction = this.gameAction.execute(this.gameContext);
@@ -318,7 +336,6 @@ class Game {
             this.drawStatistics();
             this.gameContext.dirtyStatistics = false;
         }        
-        window.requestAnimationFrame(() => this.draw());
     }
 
     // --- rendering HTML elements
