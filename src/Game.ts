@@ -21,6 +21,8 @@ type HighScoreEntry = {
 
 class Game {
 
+    private version: string = "1.0.2";
+
     private canvas?: HTMLCanvasElement;
     private scoreDiv?: HTMLDivElement;
     private levelDiv?: HTMLDivElement;
@@ -30,6 +32,7 @@ class Game {
     private canvasNextBlock?: HTMLCanvasElement;
     private canvasStatistics?: HTMLCanvasElement;
     private remainingDiv?: HTMLDivElement;
+    private copyrightDiv?: HTMLDivElement;
 
     // --- highscore
 
@@ -325,6 +328,7 @@ class Game {
                 this.gameOverDiv!.textContent = "GAME OVER";
                 this.gameOverDiv!.style.visibility = "visible";
                 this.newGameButton!.style.visibility = "visible";
+                this.copyrightDiv!.style.visibility = "visible";
                 this.showHighscoresAsync();
             }
             else if (this.gameAction.getState() == "MOVEBONUS") {
@@ -524,6 +528,12 @@ class Game {
         ControlUtils.removeAllChildren(document.body);
         const mainDiv: HTMLDivElement = ControlUtils.createDiv(document.body);
         this.renderTetris(mainDiv);
+
+        this.copyrightDiv = ControlUtils.createDiv(document.body, "copyright");
+        this.copyrightDiv.style.visibility = "hidden";
+        ControlUtils.create(this.copyrightDiv, "span", undefined, `Tetris Arcade ${this.version}. Copyright 2025 `);
+        ControlUtils.createA(this.copyrightDiv, undefined, "/view?page=copyright", "Niels Stockfleth");
+
         if (this.gameAction.getState() === "STARTSCREEN") {
             this.showStartScreen();
         }
@@ -539,6 +549,7 @@ class Game {
         this.newGameButton!.style.visibility = "visible";
         this.gameContext!.dirtyPlayground = true;
         this.gameContext!.dirtyNextBlock = true;
+        this.copyrightDiv!.style.visibility = "visible";
     }
 
     private renderInit(): void {

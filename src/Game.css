@@ -26,7 +26,6 @@ body {
     margin: 5pt;
 }
 
-
 .info {
     color: white;
     font-family: Arial, Helvetica, sans-serif;
@@ -159,6 +158,15 @@ input {
     z-index: 3;
 }
 
+.copyright {
+    position: absolute;
+    left: 100px;
+    top: 530px;
+    font-size: 8pt;
+    font-family: Arial, Helvetica, sans-serif;
+    color: lightgreen;
+}
+
 a {
     color: lightgreen;
 }
@@ -251,6 +259,12 @@ a {
         top: 90px;
         width: 130px;
         height: 100px;
+    }
+    
+    .copyright {
+        left: 10px;
+        top: 400px;
+        font-size: 6pt;
     }
     
 }
