@@ -1,8 +1,12 @@
 ﻿* {
-    user-select: none; /* supported by Chrome and Opera */
-    -webkit-user-select: none; /* Safari */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
+    -webkit-user-select: none;
+    /* Safari */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer/Edge */
+    user-select: none;
+    /* supported by Chrome and Opera */
 }
 
 body {
@@ -116,13 +120,13 @@ body {
     padding: 5pt;
 }
 
-    .button:hover {
-        background-color: #008CBA;
-        color: darkblue;
-    }
+.button:hover {
+    background-color: #008CBA;
+    color: darkblue;
+}
 
 .remainingInfo {
-    margin-top:50pt;
+    margin-top: 50pt;
     color: white;
 }
 
@@ -249,22 +253,22 @@ a {
         height: 230px;
         padding: 2px;
     }
-    
+
     input {
         font-size: 11pt;
     }
-    
+
     .addhighscore {
         left: 50px;
         top: 90px;
         width: 130px;
         height: 100px;
     }
-    
+
     .copyright {
         left: 10px;
         top: 400px;
         font-size: 6pt;
     }
-    
+
 }
