@@ -21,7 +21,7 @@ type HighScoreEntry = {
 
 class Game {
 
-    private version: string = "1.0.2";
+    private version: string = "1.0.3";
 
     private canvas?: HTMLCanvasElement;
     private scoreDiv?: HTMLDivElement;
